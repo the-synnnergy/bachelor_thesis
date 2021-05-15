@@ -11,6 +11,8 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.QueryBuilder;
 
@@ -78,9 +80,10 @@ public class test {
         File index = new File("index");
         FSDirectory directory = FSDirectory.open(index.toPath());
         EnglishAnalyzer analyzer = new EnglishAnalyzer();
-        IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(analyzer));
+        IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
+        //writerConfig.setSimilarity(new TFIDFSimilarity());
+        IndexWriter writer = new IndexWriter(directory,writerConfig);
         File f = new File("mini_newsgroups/comp.sys.ibm.pc.hardware");
-
         String[] pathnames = f.list();
         for(String name : pathnames){
             Document doc = new Document();
@@ -113,10 +116,12 @@ public class test {
             //System.out.println("Ende");
         }
         IndexSearcher search = new IndexSearcher(reader);
+        //search.setSimilarity(new ClassicSimilarity());
         EnglishAnalyzer en = new EnglishAnalyzer();
         QueryBuilder qb = new QueryBuilder(en);
+        Query q = qb.createBooleanQuery("body", "video video");
         // Create Query with Should from text
-        Query q = qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
+        /*Query q = qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
                 "From: glang@slee01.srl.ford.com (Gordon Lang)\n" +
                 "Newsgroups: comp.sys.ibm.pc.hardware\n" +
                 "Subject: Please help identify video hardware\n" +
@@ -138,7 +143,7 @@ public class test {
                 "\n" +
                 "Please email and or post any leads....\n" +
                 "\n" +
-                "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n");
+                "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n");*/
         TopDocs top = search.search(q, Integer.MAX_VALUE);
         System.out.println(search.getSimilarity());
         System.out.println(top.totalHits);
@@ -149,6 +154,21 @@ public class test {
             Document doc = search.doc(docId);
             System.out.println(luceneScore+" "+doc.get("name"));
         }
+        //System.out.println(search.explain(q,scoreDocs[1].doc));
+        Terms t = reader.getTermVector(0, "body");
+        TermsEnum te = t.iterator();
+        te.next();
+        te.next();
+        te.next();
+        System.out.println(te.docFreq());
+        System.out.println(te.totalTermFreq());
+        System.out.println(te.term().utf8ToString());
+        PostingsEnum pe = null;
+        PostingsEnum pe1 = te.postings(null, PostingsEnum.FREQS);
+        System.out.println(te.term().utf8ToString());
+        int doc = pe1.nextDoc();
+        System.out.println(pe1.freq());
+        System.out.println("docid: "+doc+" "+reader.document(doc).get("name"));
         writer.close();
         directory.close();
 
