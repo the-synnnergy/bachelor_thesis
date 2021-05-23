@@ -4,10 +4,7 @@ import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.index.memory.MemoryIndex;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -95,7 +92,7 @@ public class test {
             field.setStoreTermVectors(true);
             field.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
             doc.add(new Field("body", tmp, field));
-            doc.add(new Field("name", name, field));
+            doc.add(new StringField("name", name, Field.Store.YES));
             writer.addDocument(doc);
             List<IndexableField> fields = doc.getFields();
 
