@@ -28,6 +28,11 @@
             <artifactId>lucene-memory</artifactId>
             <version>8.8.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.11</version>
+        </dependency>
     </dependencies>
 
     <properties>
