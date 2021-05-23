@@ -42,6 +42,7 @@ public class SimilarityCalc {
     public SimilarityCalc(List<ImmutablePair<String,String>> docs, Similarities simalarity ) throws IOException {
         analyzer = new EnglishAnalyzer();
         IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
+        writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         switch (simalarity) {
             case BM25:
                 sim = new BM25Similarity();

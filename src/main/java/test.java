@@ -1,4 +1,5 @@
 //import weka.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
@@ -24,7 +25,7 @@ import java.util.*;
 public class test {
 
     public static void main(String[] args) throws Exception {
-        index_test();
+        //index_test();
         //lucene_main(args[0]);
         /*Tokenizer sample = new AlphabeticTokenizer();
         String test_string = null;
@@ -51,9 +52,41 @@ public class test {
         /*while (it.hasNext()){
             System.out.println(it.next());
         }*/
-
+        File f = new File("mini_newsgroups/comp.sys.ibm.pc.hardware");
+        String[] pathname = f.list();
+        List<ImmutablePair<String, String>> documents = new ArrayList<>();
+        for (String name : pathname) {
+            String tmp = Files.readString(Path.of("mini_newsgroups/comp.sys.ibm.pc.hardware/" + name));
+            documents.add(new ImmutablePair<String, String>(name, tmp));
+        }
+        SimilarityCalc calc = new SimilarityCalc(documents, Similarities.JMSim);
+        List<ImmutablePair<String, Float>> results = calc.getSimilarities("Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\\n\" +\n" +
+                "                \"From: glang@slee01.srl.ford.com (Gordon Lang)\\n\" +\n" +
+                "                \"Newsgroups: comp.sys.ibm.pc.hardware\\n\" +\n" +
+                "                \"Subject: Please help identify video hardware\\n\" +\n" +
+                "                \"Message-ID: <1pqep5INN88e@fmsrl7.srl.ford.com>\\n\" +\n" +
+                "                \"Date: 5 Apr 93 23:19:01 GMT\\n\" +\n" +
+                "                \"Article-I.D.: fmsrl7.1pqep5INN88e\\n\" +\n" +
+                "                \"Organization: Ford Motor Company Research Laboratory\\n\" +\n" +
+                "                \"Lines: 11\\n\" +\n" +
+                "                \"NNTP-Posting-Host: slee01.srl.ford.com\\n\" +\n" +
+                "                \"X-Newsreader: Tin 1.1 PL5\\n\" +\n" +
+                "                \"\\n\" +\n" +
+                "                \"I need a device (either an ISA board or a subsystem) which will\\n\" +\n" +
+                "                \"take two RGB video signals and combine them according to a template.\\n\" +\n" +
+                "                \"The template can be as simple as a rectangular window with signal\\n\" +\n" +
+                "                \"one being used for the interior and signal two for the exterior.\\n\" +\n" +
+                "                \"But I beleive fancier harware may also exist which I do not want\\n\" +\n" +
+                "                \"to exclude from my search.  I know this sort of hardware exists\\n\" +\n" +
+                "                \"for NTSC, etc. but I need it for RGB.\\n\" +\n" +
+                "                \"\\n\" +\n" +
+                "                \"Please email and or post any leads....\\n\" +\n" +
+                "                \"\\n\" +\n" +
+                "                \"Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\\n");
+        for (ImmutablePair<String, Float> result : results){
+            System.out.println(result.getLeft() +":"+result.getRight());
+        }
     };
-
     public static void lucene_main(String file) throws IOException {
         Analyzer anal = new EnglishAnalyzer();
         String test_string = null;
