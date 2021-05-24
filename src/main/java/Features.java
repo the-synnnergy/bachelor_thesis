@@ -1,5 +1,8 @@
 public class Features {
-    // Define the Features via Numbers for easy Array access, first the 21 pre query features
+    /**
+     * Magic Number Definitions for the Query Features
+     * First the 21 Pre-Query Features, paper: https://dl.acm.org/doi/abs/10.1145/3078841, Predicting Query Quality for Applications of Text Retrieval to Software Engineering Tasks
+     */
     public final static int AVG_IDF = 0;
     public final static int MAX_IDF = 1;
     public final static int DEV_IDF = 2;
@@ -29,4 +32,6 @@ public class Features {
     public final static int SPATIAL_AUTOCORR = 25;
     public final static int WEIGHTED_INFORMATION_GAIN = 26;
     public final static int NORMALIZED_QUERY_COMMITMENT = 27;
+
+
 }

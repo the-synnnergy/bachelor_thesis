@@ -32,11 +32,11 @@ public class SimilarityCalc {
     /*
     Variables for the reader, writer index stuff and Similarity.
      */
-    IndexWriter index_writer = null;
-    Similarity sim = null;
-    Analyzer analyzer = null;
-    IndexSearcher search = null;
-    IndexReader reader = null;
+    private IndexWriter index_writer = null;
+    private Similarity sim = null;
+    private Analyzer analyzer = null;
+    private IndexSearcher search = null;
+    private IndexReader reader = null;
 
 
     public SimilarityCalc(List<ImmutablePair<String,String>> docs, Similarities simalarity ) throws IOException {
