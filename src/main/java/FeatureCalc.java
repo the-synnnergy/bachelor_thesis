@@ -8,7 +8,7 @@ import java.util.Map;
 public class FeatureCalc {
     private List<ImmutablePair<String,String>> corpus1;
     private List<ImmutablePair<String,String>> corpus2;
-    private Map<ImmutablePair<String,String>,TraceabilityRecoveryFeatures> documents_to_features;
+    public Map<ImmutablePair<String,String>,TraceabilityRecoveryFeatures> documents_to_features;
     public FeatureCalc(List<ImmutablePair<String, String>> corpus1, List<ImmutablePair<String, String>> corpus2) throws IOException {
         this.corpus1 = corpus1;
         this.corpus2 = corpus2;
@@ -31,13 +31,21 @@ public class FeatureCalc {
             for (int i = 0; i< corpus2_SimCalc.length;i++){
                 Map<String, Float> results = corpus2_SimCalc[i].getCalculatedSimilarities(document.right);
                 int finalI = i;
-                results.forEach((k, v) -> add_Similarity_to_Feature(document.left,k,v, finalI));
+                results.forEach((k, v) -> add_Similarity_to_Feature(new ImmutablePair<>(document.left, k),v,finalI, document.left));
+            }
+        }
+        for(ImmutablePair<String,String> document : corpus2){
+            float[] sims = new float[Similarities.values().length];
+            for (int i = 0; i< corpus1_SimCalc.length;i++){
+                Map<String, Float> results = corpus2_SimCalc[i].getCalculatedSimilarities(document.right);
+                int finalI = i;
+                results.forEach((k, v) -> add_Similarity_to_Feature(new ImmutablePair<>(k, document.left),v,finalI, document.left));
             }
         }
         return null;
     }
 
-    private void add_Similarity_to_Feature(String document1, String document2, float score, int similarity){
-        documents_to_features.get(new ImmutablePair<String,String>(document1,document2)).setSimilarityScore(score,document1,similarity);
+    private void add_Similarity_to_Feature(ImmutablePair<String,String> key, float score, int similarity, String query_document_title){
+        documents_to_features.get(key).setSimilarityScore(score,query_document_title,similarity);
     }
 }
