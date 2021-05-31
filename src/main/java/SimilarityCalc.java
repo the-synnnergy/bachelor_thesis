@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 enum Similarities{
     BM25,
@@ -38,12 +40,15 @@ public class SimilarityCalc {
     private IndexSearcher search = null;
     private IndexReader reader = null;
 
+    public Similarity getSim() {
+        return sim;
+    }
 
-    public SimilarityCalc(List<ImmutablePair<String,String>> docs, Similarities simalarity ) throws IOException {
+    public SimilarityCalc(List<ImmutablePair<String,String>> docs, Similarities similarity ) throws IOException {
         analyzer = new EnglishAnalyzer();
         IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-        switch (simalarity) {
+        switch (similarity) {
             case BM25:
                 sim = new BM25Similarity();
                 break;
@@ -93,17 +98,18 @@ public class SimilarityCalc {
         search.setSimilarity(this.sim);
     }
 
-    public List<ImmutablePair<String,Float>> getSimilarities(String query) throws IOException {
+    public Map<String,Float> getCalculatedSimilarities(String query) throws IOException {
         QueryBuilder qb = new QueryBuilder(analyzer);
         Query q = qb.createBooleanQuery("body",query);
         TopDocs top = search.search(q, Integer.MAX_VALUE);
         ScoreDoc[] scoreDocs = top.scoreDocs;
-        List<ImmutablePair<String,Float>>  results = new ArrayList<>();
+        Map<String,Float> results = new HashMap<>();
+        System.out.println(scoreDocs.length);
         for(ScoreDoc hit: scoreDocs){
             int docId = hit.doc;
             float score = hit.score;
             String title = search.doc(docId).get("title");
-            results.add(new ImmutablePair<String,Float>(title, score));
+            results.put(search.doc(docId).get("title"), hit.score);
         }
         return results;
     }

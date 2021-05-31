@@ -7,16 +7,11 @@ import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
-import org.apache.lucene.index.memory.MemoryIndex;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
-import org.apache.lucene.search.similarities.ClassicSimilarity;
-import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.QueryBuilder;
-import org.apache.lucene.index.*;
+
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,7 +20,7 @@ import java.util.*;
 public class test {
 
     public static void main(String[] args) throws Exception {
-        //index_test();
+        index_test();
         //lucene_main(args[0]);
         /*Tokenizer sample = new AlphabeticTokenizer();
         String test_string = null;
@@ -59,8 +54,8 @@ public class test {
             String tmp = Files.readString(Path.of("mini_newsgroups/comp.sys.ibm.pc.hardware/" + name));
             documents.add(new ImmutablePair<String, String>(name, tmp));
         }
-        SimilarityCalc calc = new SimilarityCalc(documents, Similarities.JMSim);
-        List<ImmutablePair<String, Float>> results = calc.getSimilarities("Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\\n\" +\n" +
+        SimilarityCalc calc = new SimilarityCalc(documents, Similarities.TF_IDF);
+        Map<String,Float> results = calc.getCalculatedSimilarities("Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\\n\" +\n" +
                 "                \"From: glang@slee01.srl.ford.com (Gordon Lang)\\n\" +\n" +
                 "                \"Newsgroups: comp.sys.ibm.pc.hardware\\n\" +\n" +
                 "                \"Subject: Please help identify video hardware\\n\" +\n" +
@@ -83,9 +78,7 @@ public class test {
                 "                \"Please email and or post any leads....\\n\" +\n" +
                 "                \"\\n\" +\n" +
                 "                \"Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\\n");
-        for (ImmutablePair<String, Float> result : results){
-            System.out.println(result.getLeft() +":"+result.getRight());
-        }
+        results.forEach((k,v)->System.out.println(k+" "+v));
     };
     public static void lucene_main(String file) throws IOException {
         Analyzer anal = new EnglishAnalyzer();
@@ -150,9 +143,9 @@ public class test {
         //search.setSimilarity(new ClassicSimilarity());
         EnglishAnalyzer en = new EnglishAnalyzer();
         QueryBuilder qb = new QueryBuilder(en);
-        Query q = qb.createBooleanQuery("body", "video video");
+        //Query q = qb.createBooleanQuery("body", "video video");
         // Create Query with Should from text
-        /*Query q = qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
+        BooleanQuery q = (BooleanQuery) qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
                 "From: glang@slee01.srl.ford.com (Gordon Lang)\n" +
                 "Newsgroups: comp.sys.ibm.pc.hardware\n" +
                 "Subject: Please help identify video hardware\n" +
@@ -174,8 +167,8 @@ public class test {
                 "\n" +
                 "Please email and or post any leads....\n" +
                 "\n" +
-                "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n");*/
-        TopDocs top = search.search(q, Integer.MAX_VALUE);
+                "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n");
+        /**TopDocs top = search.search(q, Integer.MAX_VALUE);
         System.out.println(search.getSimilarity());
         System.out.println(top.totalHits);
         ScoreDoc[] scoreDocs = top.scoreDocs;
@@ -185,21 +178,30 @@ public class test {
             Document doc = search.doc(docId);
             System.out.println(luceneScore+" "+doc.get("name"));
         }
-        //System.out.println(search.explain(q,scoreDocs[1].doc));
-        Terms t = reader.getTermVector(0, "body");
+        //System.out.println(search.explain(q,scoreDocs[1].doc)); */
+        Iterator<BooleanClause> qt = q.iterator();
+        while (qt.hasNext()){
+            BooleanClause bc = qt.next();
+            TermQuery bq = (TermQuery) bc.getQuery();
+            System.out.println(bq.getTerm().text());
+        }
+        Terms t = MultiTerms.getTerms(reader, "body");
         TermsEnum te = t.iterator();
-        te.next();
+        /** te.next();
         te.next();
         te.next();
         System.out.println(te.docFreq());
         System.out.println(te.totalTermFreq());
-        System.out.println(te.term().utf8ToString());
+        System.out.println(te.term().utf8ToString()); */
         PostingsEnum pe = null;
         PostingsEnum pe1 = te.postings(null, PostingsEnum.FREQS);
-        System.out.println(te.term().utf8ToString());
-        int doc = pe1.nextDoc();
-        System.out.println(pe1.freq());
-        System.out.println("docid: "+doc+" "+reader.document(doc).get("name"));
+        //System.out.println(te.term().utf8ToString());
+        //int doc = pe1.nextDoc();
+        //System.out.println(pe1.freq());
+        //System.out.println("docid: "+doc+" "+reader.document(doc).get("name"));
+        while(te.next() != null){
+            //System.out.println(te.term().utf8ToString());
+        }
         writer.close();
         directory.close();
 

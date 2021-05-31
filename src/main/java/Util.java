@@ -1,4 +1,6 @@
-public class Features {
+public class Util {
+
+    public final static int FEATURE_COUNT = 32;
     /**
      * Magic Number Definitions for the Query Features
      * First the 21 Pre-Query Features, paper: https://dl.acm.org/doi/abs/10.1145/3078841, Predicting Query Quality for Applications of Text Retrieval to Software Engineering Tasks
@@ -24,7 +26,9 @@ public class Features {
     public final static int SUM_SCQ = 18;
     public final static int AVG_PMI = 19;
     public final static int MAX_PMI = 20;
-    // now the seven post retrieval query features
+    /** now the seven post retriveal query features
+     *
+     */
     public final static int SUBQUERY_OL = 21;
     public final static int ROBUSTNESS_SCORE = 22;
     public final static int FIRST_RANK_CHANGE = 23;
@@ -33,5 +37,11 @@ public class Features {
     public final static int WEIGHTED_INFORMATION_GAIN = 26;
     public final static int NORMALIZED_QUERY_COMMITMENT = 27;
 
-
+    /**
+     * Constant Definitions for the IR-Features
+     */
+    public final static int BM25_SCORE = 28;
+    public final static int VSM_TF_IDF_SCORE = 29;
+    public final static int JM_SCORE = 30;
+    public final static int Dirichlet = 31;
 }
