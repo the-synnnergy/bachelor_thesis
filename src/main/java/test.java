@@ -8,6 +8,8 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.similarities.LMJelinekMercerSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.QueryBuilder;
 
@@ -20,6 +22,7 @@ import java.util.*;
 public class test {
 
     public static void main(String[] args) throws Exception {
+
         index_test();
         //lucene_main(args[0]);
         /*Tokenizer sample = new AlphabeticTokenizer();
@@ -47,7 +50,7 @@ public class test {
         /*while (it.hasNext()){
             System.out.println(it.next());
         }*/
-        File f = new File("mini_newsgroups/comp.sys.ibm.pc.hardware");
+        /*File f = new File("mini_newsgroups/comp.sys.ibm.pc.hardware");
         String[] pathname = f.list();
         List<ImmutablePair<String, String>> documents = new ArrayList<>();
         for (String name : pathname) {
@@ -78,7 +81,7 @@ public class test {
                 "                \"Please email and or post any leads....\\n\" +\n" +
                 "                \"\\n\" +\n" +
                 "                \"Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\\n");
-        results.forEach((k,v)->System.out.println(k+" "+v));
+        results.forEach((k,v)->System.out.println(k+" "+v));*/
     };
     public static void lucene_main(String file) throws IOException {
         Analyzer anal = new EnglishAnalyzer();
@@ -105,7 +108,7 @@ public class test {
         FSDirectory directory = FSDirectory.open(index.toPath());
         EnglishAnalyzer analyzer = new EnglishAnalyzer();
         IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
-        //writerConfig.setSimilarity(new TFIDFSimilarity());
+        writerConfig.setSimilarity(new LMJelinekMercerSimilarity(0.7f));
         IndexWriter writer = new IndexWriter(directory,writerConfig);
         File f = new File("mini_newsgroups/comp.sys.ibm.pc.hardware");
         String[] pathnames = f.list();
@@ -140,12 +143,12 @@ public class test {
             //System.out.println("Ende");
         }
         IndexSearcher search = new IndexSearcher(reader);
-        //search.setSimilarity(new ClassicSimilarity());
+        search.setSimilarity(new ClassicSimilarity());
         EnglishAnalyzer en = new EnglishAnalyzer();
         QueryBuilder qb = new QueryBuilder(en);
-        //Query q = qb.createBooleanQuery("body", "video video");
+        Query q = new CustomTermQuery(new Term("body", "video"));
         // Create Query with Should from text
-        BooleanQuery q = (BooleanQuery) qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
+        /** Query q = qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
                 "From: glang@slee01.srl.ford.com (Gordon Lang)\n" +
                 "Newsgroups: comp.sys.ibm.pc.hardware\n" +
                 "Subject: Please help identify video hardware\n" +
@@ -167,8 +170,8 @@ public class test {
                 "\n" +
                 "Please email and or post any leads....\n" +
                 "\n" +
-                "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n");
-        /**TopDocs top = search.search(q, Integer.MAX_VALUE);
+                "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n"); **/
+        TopDocs top = search.search(q, Integer.MAX_VALUE);
         System.out.println(search.getSimilarity());
         System.out.println(top.totalHits);
         ScoreDoc[] scoreDocs = top.scoreDocs;
@@ -177,23 +180,24 @@ public class test {
             float luceneScore = scored.score;
             Document doc = search.doc(docId);
             System.out.println(luceneScore+" "+doc.get("name"));
+            //System.out.println(search.explain(q, docId));
         }
-        //System.out.println(search.explain(q,scoreDocs[1].doc)); */
-        Iterator<BooleanClause> qt = q.iterator();
+        //System.out.println(search.explain(q,scoreDocs[1].doc));
+        /*Iterator<BooleanClause> qt = q.iterator();
         while (qt.hasNext()){
             BooleanClause bc = qt.next();
             TermQuery bq = (TermQuery) bc.getQuery();
             System.out.println(bq.getTerm().text());
         }
         Terms t = MultiTerms.getTerms(reader, "body");
-        TermsEnum te = t.iterator();
+        TermsEnum te = t.iterator();*/
         /** te.next();
         te.next();
         te.next();
         System.out.println(te.docFreq());
         System.out.println(te.totalTermFreq());
         System.out.println(te.term().utf8ToString()); */
-        PostingsEnum pe = null;
+        /*PostingsEnum pe = null;
         PostingsEnum pe1 = te.postings(null, PostingsEnum.FREQS);
         //System.out.println(te.term().utf8ToString());
         //int doc = pe1.nextDoc();
@@ -201,7 +205,7 @@ public class test {
         //System.out.println("docid: "+doc+" "+reader.document(doc).get("name"));
         while(te.next() != null){
             //System.out.println(te.term().utf8ToString());
-        }
+        }*/
         writer.close();
         directory.close();
 
