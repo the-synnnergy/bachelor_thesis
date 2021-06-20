@@ -121,7 +121,9 @@ public class test {
             field.setStored(true);
             field.setStoreTermVectors(true);
             field.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-            doc.add(new Field("body", tmp, field));
+            Field fd = new Field("body", tmp, field);
+            doc.add(fd);
+            System.out.println(fd.stringValue());
             doc.add(new StringField("name", name, Field.Store.YES));
             writer.addDocument(doc);
             List<IndexableField> fields = doc.getFields();
@@ -137,7 +139,7 @@ public class test {
         for(int i = 0; i< reader.maxDoc();i++){
             Terms t = reader.getTermVector(i, "body");
             TermsEnum t_it = t.iterator();
-            System.out.println(t_it.term().utf8ToString());
+            //System.out.println(t_it.term().utf8ToString());
             while(t_it.next() != null){
                 //System.out.println(t_it.term().utf8ToString());
             }
@@ -173,14 +175,14 @@ public class test {
                 "\n" +
                 "Gordon Lang (glang@smail.srl.ford.com  -or-  glang@holo6.srl.ford.com)\n"); **/
         TopDocs top = search.search(q, Integer.MAX_VALUE);
-        System.out.println(search.getSimilarity());
-        System.out.println(top.totalHits);
+        //System.out.println(search.getSimilarity());
+        //System.out.println(top.totalHits);
         ScoreDoc[] scoreDocs = top.scoreDocs;
         for (ScoreDoc scored : scoreDocs){
             int docId = scored.doc;
             float luceneScore = scored.score;
             Document doc = search.doc(docId);
-            System.out.println(luceneScore+" "+doc.get("name"));
+            //System.out.println(luceneScore+" "+doc.get("name"));
             //System.out.println(search.explain(q, docId));
         }
         //System.out.println(search.explain(q,scoreDocs[1].doc));
@@ -210,7 +212,7 @@ public class test {
         Terms all = MultiTerms.getTerms(reader,"body");
         TermsEnum all_enum = all.iterator();
         while (all_enum.next() != null){
-            System.out.println(all_enum.term().utf8ToString());
+            //System.out.println(all_enum.term().utf8ToString());
         }
         writer.close();
         directory.close();

@@ -66,7 +66,9 @@ public class PreQueryCalc {
             while (postings.nextDoc() != NO_MORE_DOCS){
                 tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
             }
+            map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
         }
+        // #TODO length of the documents!(Should i use the tokenized lenght or normal length? Mostly tokenized, because i use the tokenized freqs everywhere
         /**
          * List<Terms> term_vectors = new ArrayList<>();
          *         for(int i = 0;i<collection_size;i++){
