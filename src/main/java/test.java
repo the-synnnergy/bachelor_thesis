@@ -8,7 +8,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
-import org.apache.lucene.core.*;
+//import org.apache.lucene.core.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.LMJelinekMercerSimilarity;
 import org.apache.lucene.store.FSDirectory;
@@ -207,6 +207,11 @@ public class test {
         while(te.next() != null){
             //System.out.println(te.term().utf8ToString());
         }*/
+        Terms all = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_enum = all.iterator();
+        while (all_enum.next() != null){
+            System.out.println(all_enum.term().utf8ToString());
+        }
         writer.close();
         directory.close();
 
