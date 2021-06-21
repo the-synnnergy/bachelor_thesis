@@ -68,7 +68,7 @@ public class PreQueryCalc {
             }
             map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
         }
-        // #TODO length of the documents!(Should i use the tokenized lenght or normal length? Mostly tokenized, because i use the tokenized freqs everywhere
+        // #TODO length of the documents!(Should i use the tokenized length or normal length? Mostly tokenized, because i use the tokenized freqs everywhere
         /**
          * List<Terms> term_vectors = new ArrayList<>();
          *         for(int i = 0;i<collection_size;i++){
@@ -111,6 +111,12 @@ public class PreQueryCalc {
         return reader;
     }
 
+    /**
+     *
+     * @param query
+     * @return
+     * @throws IOException
+     */
     public PrequeryFeatures get_prequery_features(String query) throws IOException {
         PrequeryFeatures features = new PrequeryFeatures();
         Analyzer anal = new EnglishAnalyzer();
@@ -128,27 +134,49 @@ public class PreQueryCalc {
     /**
      * Calclates the idf features for the given tokens!
      * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
-     * @return  Array with idf_features, avg, max and dev! #TODO USE CONSTANTS FOR ACCESING ARRAY POSITIONS!
+     * @return  Array with idf_features, avg, max and dev! #TODO USE CONSTANTS FOR ACCESSING ARRAY POSITIONS!
      */
     private double[] get_idf_features(List<String> tokens) {
         double avg_idf = 0;
         double max_idf = 0;
         double dev_idf = 0;
-        int docs = 0;
+        int query_terms = 0;
         Float tmp = null;
         List<Double> terms_idf = new ArrayList<>();
         for (String token: tokens){
             tmp = idf_map.get(token);
             if(tmp != null){
                 terms_idf.add(tmp.doubleValue());
-                docs++;
+                query_terms++;
                 if(tmp > max_idf) max_idf = tmp;
                 avg_idf += tmp;
             }
         }
-        avg_idf = avg_idf * (1.0d/tokens.size());
+        avg_idf = avg_idf * (1.0d/query_terms);
         dev_idf = populationVariance(terms_idf.stream().mapToDouble(d -> d).toArray(),avg_idf);
         return new double[]{avg_idf,max_idf,dev_idf};
+    }
+
+    private double[] get_ictf_features(List<String> tokens){
+        double avg_ictf = 0;
+        double max_ictf = 0;
+        double dev_ictf = 0;
+        int query_terms = 0;
+        List<Double> terms_ictf = new ArrayList<>();
+        Long tmp_tf = null;
+        for(String token: tokens){
+            tmp_tf = corpus_termfrequency.get(token);
+            if(tmp_tf != null){
+                double tmp_ictf = Math.log(((double)collection_size)/tmp_tf);
+                if(tmp_ictf > max_ictf) max_ictf = tmp_ictf;
+                avg_ictf += tmp_ictf;
+                query_terms++;
+                terms_ictf.add(tmp_ictf);
+            }
+        }
+        avg_ictf = avg_ictf *(1.0d/query_terms);
+        dev_ictf = populationVariance(terms_ictf.stream().mapToDouble(d -> d).toArray(),avg_ictf);
+        return new double[]{avg_ictf,max_ictf,dev_ictf};
     }
 
 }
