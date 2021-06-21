@@ -1,4 +1,5 @@
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
@@ -8,6 +9,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.comparators.DoubleComparator;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -157,6 +159,11 @@ public class PreQueryCalc {
         return new double[]{avg_idf,max_idf,dev_idf};
     }
 
+    /**
+     *
+     * @param tokens
+     * @return
+     */
     private double[] get_ictf_features(List<String> tokens){
         double avg_ictf = 0;
         double max_ictf = 0;
@@ -167,7 +174,7 @@ public class PreQueryCalc {
         for(String token: tokens){
             tmp_tf = corpus_termfrequency.get(token);
             if(tmp_tf != null){
-                double tmp_ictf = Math.log(((double)collection_size)/tmp_tf);
+                double tmp_ictf = Math.log(((double)collection_size)/tmp_tf)/Math.log(2);
                 if(tmp_ictf > max_ictf) max_ictf = tmp_ictf;
                 avg_ictf += tmp_ictf;
                 query_terms++;
@@ -177,6 +184,36 @@ public class PreQueryCalc {
         avg_ictf = avg_ictf *(1.0d/query_terms);
         dev_ictf = populationVariance(terms_ictf.stream().mapToDouble(d -> d).toArray(),avg_ictf);
         return new double[]{avg_ictf,max_ictf,dev_ictf};
+    }
+
+    /**
+     *
+     * @param tokens
+     * @return
+     */
+    private double[] get_entropy_features(List<String> tokens){
+        double avg_entropy = 0;
+        double median_entropy = 0;
+        double max_entropy = 0;
+        int query_terms = 0;
+        Integer term_frequency = 0;
+        List<Double> entropies = new ArrayList<>();
+        for(String token: tokens){
+            Map<String,Integer> tf_map= map_to_termfrequency_map.get(token);
+            if(tf_map == null) continue;
+            query_terms++;
+            double tmp_entropy = 0;
+            long corpus_tf = corpus_termfrequency.get(token);
+            for (Map.Entry<String,Integer> entry : tf_map.entrySet()){
+                tmp_entropy +=(((double)entry.getValue())/corpus_tf)*(Math.log(((double)entry.getValue())/corpus_tf)/Math.log(collection_size));
+            }
+            if(tmp_entropy > max_entropy) max_entropy = tmp_entropy;
+            entropies.add(tmp_entropy);
+            avg_entropy += avg_entropy;
+        }
+        avg_entropy = avg_entropy/collection_size;
+        median_entropy = new Median().evaluate(entropies.stream().mapToDouble(d -> d).toArray());
+        return new double[]{avg_entropy,median_entropy,max_entropy};
     }
 
 }
