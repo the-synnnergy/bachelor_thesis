@@ -9,17 +9,13 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.comparators.DoubleComparator;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.apache.commons.math3.stat.StatUtils.populationVariance;
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
@@ -49,6 +45,7 @@ public class PreQueryCalc {
     private Map<String,Long> corpus_termfrequency;
     private Map<String,Map<String,Integer>> map_to_termfrequency_map;
     private Map<String, Float> idf_map;
+    private Map<String, Integer> doc_length_map;
     private long total_tokens;
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException {
         this.corpus = corpus;
@@ -64,13 +61,15 @@ public class PreQueryCalc {
             Map<String,Integer> tf_map = new HashMap<>();
             idf_map.put(term.utf8ToString(),new ClassicSimilarity().idf(all_terms_it.docFreq(),collection_size));
             PostingsEnum postings = all_terms_it.postings(null);
-            int doc_id = postings.nextDoc();
-            while (postings.nextDoc() != NO_MORE_DOCS){
+            int doc_id = 0;
+            while ((doc_id =postings.nextDoc()) != NO_MORE_DOCS){
+                // Add freqs to Map key for document length! #TODO fix this to readable!
+                doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(),0)+ postings.freq());
                 tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
             }
             map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
         }
-        // #TODO length of the documents!(Should i use the tokenized length or normal length? Mostly tokenized, because i use the tokenized freqs everywhere
+        //
         /**
          * List<Terms> term_vectors = new ArrayList<>();
          *         for(int i = 0;i<collection_size;i++){
@@ -215,5 +214,40 @@ public class PreQueryCalc {
         median_entropy = new Median().evaluate(entropies.stream().mapToDouble(d -> d).toArray());
         return new double[]{avg_entropy,median_entropy,max_entropy};
     }
+
+    private double[] get_var_features(List<String> tokens){
+        double avg_var = 0;
+        double max_var = 0;
+        double sum_var = 0;
+        int query_terms = 0;
+        for (String token: tokens){
+            Double var = calc_var_for_term(token);
+            if(var == null) continue;
+            query_terms++;
+            sum_var += var;
+            if(var > max_var) max_var = var;
+        }
+        avg_var = sum_var/query_terms;
+        return new double[]{avg_var,max_var,sum_var};
+    }
+
+    private Double calc_var_for_term(String token){
+        Double var = 0d;
+        Map<String,Integer> tf_freqs = map_to_termfrequency_map.get(token);
+        if(tf_freqs == null) return null;
+        double var_upper_sum = 0;
+        double[] wtds = new double[map_to_termfrequency_map.size()];
+        int i = 0;
+        for(Map.Entry<String,Integer> entry: tf_freqs.entrySet()){
+            wtds[i] = (1.0d/(doc_length_map.get(entry.getKey()))) * Math.log(1+entry.getValue())*idf_map.get(token);
+        }
+        double avg_wtd = (1.0d/collection_size)*Arrays.stream(wtds).sum();
+        for(double wtd : wtds){
+            var_upper_sum += Math.pow(wtd - avg_wtd,2);
+        }
+        var = Math.sqrt(var_upper_sum/wtds.length);
+        return var;
+    }
+
 
 }
