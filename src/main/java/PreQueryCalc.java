@@ -69,6 +69,8 @@ public class PreQueryCalc {
             }
             map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
         }
+
+
         //
         /**
          * List<Terms> term_vectors = new ArrayList<>();
@@ -129,6 +131,9 @@ public class PreQueryCalc {
             tokens.add(attr.toString());
         }
         features.idf_features = get_idf_features(tokens);
+        features.ictf_features = get_ictf_features(tokens);
+        features.entropy_features = get_entropy_features(tokens);
+        features.var_features = get_var_features(tokens);
         return features;
     }
 
