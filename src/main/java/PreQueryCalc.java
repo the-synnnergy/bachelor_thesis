@@ -47,6 +47,7 @@ public class PreQueryCalc {
     private Map<String, Float> idf_map;
     private Map<String, Integer> doc_length_map;
     private long total_tokens;
+    private Map<String,Double> scs_prob_corpus;
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException {
         this.corpus = corpus;
         IndexReader reader = generate_index(corpus);
@@ -67,8 +68,18 @@ public class PreQueryCalc {
                 doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(),0)+ postings.freq());
                 tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
             }
+            // Put map with Frequency for Terms in all Documents in Termmap, so we can find get the Termmap via Term and then find frequency via Document title!
             map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
         }
+
+        for(Map.Entry<String,Integer> entry : doc_length_map.entrySet()){
+            total_tokens += entry.getValue();
+        }
+        for(Map.Entry<String,Long> entry: corpus_termfrequency.entrySet()){
+            scs_prob_corpus.put(entry.getKey(), ((double) entry.getValue())/total_tokens);
+        }
+
+
 
 
         //
@@ -220,6 +231,11 @@ public class PreQueryCalc {
         return new double[]{avg_entropy,median_entropy,max_entropy};
     }
 
+    /**
+     *
+     * @param tokens
+     * @return
+     */
     private double[] get_var_features(List<String> tokens){
         double avg_var = 0;
         double max_var = 0;
@@ -236,6 +252,11 @@ public class PreQueryCalc {
         return new double[]{avg_var,max_var,sum_var};
     }
 
+    /**
+     *
+     * @param token
+     * @return
+     */
     private Double calc_var_for_term(String token){
         Double var = 0d;
         Map<String,Integer> tf_freqs = map_to_termfrequency_map.get(token);
@@ -252,6 +273,63 @@ public class PreQueryCalc {
         }
         var = Math.sqrt(var_upper_sum/wtds.length);
         return var;
+    }
+
+    /**
+     *
+     * @param tokens
+     * @return
+     */
+    private double get_query_scope(List<String> tokens){
+        // set to track and length of the tf_maps for each term, corpus size is save in collection size
+        Set<String> documents_containing_queryterms = new HashSet<>();
+        for(String token:tokens){
+            Map<String,Integer> docs =map_to_termfrequency_map.get(token);
+            for(Map.Entry<String,Integer> entry : docs.entrySet()){
+                documents_containing_queryterms.add(entry.getKey());
+            }
+        }
+        return documents_containing_queryterms.size()/((double) collection_size);
+    }
+
+    /**
+     *
+     * @param tokens
+     * @return
+     */
+    private double get_sclarity_score(List<String> tokens){
+        Set<String> token_set = new HashSet<>(tokens);
+        int query_size = token_set.size();
+        double scs = 0;
+        for(String token: token_set){
+            double prob_token_query = Collections.frequency(tokens,token)/((double) query_size);
+            double prob_token_corpus = scs_prob_corpus.get(token);
+            scs += prob_token_query*Math.log(prob_token_query/prob_token_corpus);
+        }
+        return scs;
+    }
+
+    /**
+     *
+     * @param tokens
+     * @return
+     */
+    private double[] get_scq_features(List<String> tokens){
+        double avg_scq = 0;
+        double max_scq = 0;
+        double sum_scq = 0;
+        int query_terms = 0;
+        for(String token: tokens){
+            Long tf = corpus_termfrequency.get(token);
+            Float idf = idf_map.get(token);
+            if(tf == null || idf == null) continue;
+            Double scq = (1+Math.log(tf)) * idf;
+            if(scq > max_scq) max_scq = scq;
+            sum_scq += scq;
+            query_terms++;
+        }
+        avg_scq = sum_scq/query_terms;
+        return new double[]{avg_scq,max_scq,sum_scq};
     }
 
 
