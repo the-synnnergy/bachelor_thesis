@@ -1,5 +1,6 @@
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
@@ -9,9 +10,12 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.MathUtil;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,7 +26,7 @@ import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
 /**
  * Class for Prequery Calculations, in this case all the PreQuery Features defined in DOI:10.1145/3078841.
- * As IDF we will use the Lucene Implemenation here( i think) #TODO
+ * As IDF we will use the Lucene Implementation here( i think) #TODO
  * Needs to precalculate and save the following:
  * idf for all Terms, tf for All terms, Collection size, Tf for Collection, Collection Size, overall Termfrequency and
  * the number of tokens in the Collection
@@ -39,18 +43,24 @@ public class PreQueryCalc {
         double query_scope;
         double simplified_clarity_score;
         double coherence_score;
+
+        @Override
+        public String toString(){
+            return (Arrays.toString(idf_features)+" "+Arrays.toString(ictf_features)+" "+Arrays.toString(var_features)+" "+Arrays.toString(entropy_features)+" "+Arrays.toString(var_features))+" ;queryscope "+query_scope+";scs:"+simplified_clarity_score;
+        }
     }
     private List<ImmutablePair<String,String>> corpus;
     private int collection_size;
-    private Map<String,Long> corpus_termfrequency;
-    private Map<String,Map<String,Integer>> map_to_termfrequency_map;
-    private Map<String, Float> idf_map;
-    private Map<String, Integer> doc_length_map;
+    private Map<String,Long> corpus_termfrequency = new HashMap<>();
+    private Map<String,Map<String,Integer>> map_to_termfrequency_map = new HashMap<>();
+    private Map<String, Float> idf_map = new HashMap<>();
+    private Map<String, Integer> doc_length_map = new HashMap<>();
     private long total_tokens;
-    private Map<String,Double> scs_prob_corpus;
+    private Map<String,Double> scs_prob_corpus = new HashMap<>();
+    private IndexReader reader;
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException {
         this.corpus = corpus;
-        IndexReader reader = generate_index(corpus);
+        reader = generate_index(corpus);
         //extract IDF, tf for evey Document, TF over whole corpus, Document length as tokenized and the collection size from Lucene index.
         collection_size = reader.getDocCount("body");
         total_tokens = reader.getSumTotalTermFreq("body");
@@ -64,7 +74,7 @@ public class PreQueryCalc {
             PostingsEnum postings = all_terms_it.postings(null);
             int doc_id = 0;
             while ((doc_id =postings.nextDoc()) != NO_MORE_DOCS){
-                // Add freqs to Map key for document length! #TODO fix this to readable!
+                // Add frequencies to Map key for document length! #TODO fix this to readable!
                 doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(),0)+ postings.freq());
                 tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
             }
@@ -78,20 +88,6 @@ public class PreQueryCalc {
         for(Map.Entry<String,Long> entry: corpus_termfrequency.entrySet()){
             scs_prob_corpus.put(entry.getKey(), ((double) entry.getValue())/total_tokens);
         }
-
-
-
-
-        //
-        /**
-         * List<Terms> term_vectors = new ArrayList<>();
-         *         for(int i = 0;i<collection_size;i++){
-         *             term_vectors.add(reader.getTermVector(i,"body"));
-         *         }
-         */
-
-
-
     }
 
     /**
@@ -121,8 +117,7 @@ public class PreQueryCalc {
             index_writer.addDocument(doc);
         }
         index_writer.commit();
-        IndexReader reader = DirectoryReader.open(index_writer);
-        return reader;
+        return DirectoryReader.open(index_writer);
     }
 
     /**
@@ -145,18 +140,20 @@ public class PreQueryCalc {
         features.ictf_features = get_ictf_features(tokens);
         features.entropy_features = get_entropy_features(tokens);
         features.var_features = get_var_features(tokens);
+        features.scq_features = get_scq_features(tokens);
+        features.query_scope = get_query_scope(tokens);
+        features.simplified_clarity_score = get_sclarity_score(tokens);
         return features;
     }
 
     /**
-     * Calclates the idf features for the given tokens!
+     * Calculates the idf features for the given tokens!
      * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
      * @return  Array with idf_features, avg, max and dev! #TODO USE CONSTANTS FOR ACCESSING ARRAY POSITIONS!
      */
     private double[] get_idf_features(List<String> tokens) {
         double avg_idf = 0;
         double max_idf = 0;
-        double dev_idf = 0;
         int query_terms = 0;
         Float tmp = null;
         List<Double> terms_idf = new ArrayList<>();
@@ -170,7 +167,7 @@ public class PreQueryCalc {
             }
         }
         avg_idf = avg_idf * (1.0d/query_terms);
-        dev_idf = populationVariance(terms_idf.stream().mapToDouble(d -> d).toArray(),avg_idf);
+        double dev_idf = populationVariance(terms_idf.stream().mapToDouble(d -> d).toArray(),avg_idf);
         return new double[]{avg_idf,max_idf,dev_idf};
     }
 
@@ -182,7 +179,7 @@ public class PreQueryCalc {
     private double[] get_ictf_features(List<String> tokens){
         double avg_ictf = 0;
         double max_ictf = 0;
-        double dev_ictf = 0;
+        double dev_ictf;
         int query_terms = 0;
         List<Double> terms_ictf = new ArrayList<>();
         Long tmp_tf = null;
@@ -202,14 +199,15 @@ public class PreQueryCalc {
     }
 
     /**
-     *
+     *  #TODO Some error here in calculation, should be fixed
      * @param tokens
      * @return
      */
     private double[] get_entropy_features(List<String> tokens){
         double avg_entropy = 0;
-        double median_entropy = 0;
-        double max_entropy = 0;
+        double median_entropy;
+        //since entropies are negative initializing with 0 was a bad idea, fixed it by setting it to lowest :)
+        double max_entropy = - Double.MAX_VALUE;
         int query_terms = 0;
         Integer term_frequency = 0;
         List<Double> entropies = new ArrayList<>();
@@ -217,6 +215,7 @@ public class PreQueryCalc {
             Map<String,Integer> tf_map= map_to_termfrequency_map.get(token);
             if(tf_map == null) continue;
             query_terms++;
+
             double tmp_entropy = 0;
             long corpus_tf = corpus_termfrequency.get(token);
             for (Map.Entry<String,Integer> entry : tf_map.entrySet()){
@@ -224,7 +223,7 @@ public class PreQueryCalc {
             }
             if(tmp_entropy > max_entropy) max_entropy = tmp_entropy;
             entropies.add(tmp_entropy);
-            avg_entropy += avg_entropy;
+            avg_entropy += tmp_entropy;
         }
         avg_entropy = avg_entropy/collection_size;
         median_entropy = new Median().evaluate(entropies.stream().mapToDouble(d -> d).toArray());
@@ -285,6 +284,7 @@ public class PreQueryCalc {
         Set<String> documents_containing_queryterms = new HashSet<>();
         for(String token:tokens){
             Map<String,Integer> docs =map_to_termfrequency_map.get(token);
+            if(docs == null) continue;
             for(Map.Entry<String,Integer> entry : docs.entrySet()){
                 documents_containing_queryterms.add(entry.getKey());
             }
@@ -293,7 +293,7 @@ public class PreQueryCalc {
     }
 
     /**
-     *
+     * #TODO seems to have bugs...
      * @param tokens
      * @return
      */
@@ -302,8 +302,11 @@ public class PreQueryCalc {
         int query_size = token_set.size();
         double scs = 0;
         for(String token: token_set){
+            Double prob_token_corpus = scs_prob_corpus.get(token);
+            if(prob_token_corpus == null) continue;
             double prob_token_query = Collections.frequency(tokens,token)/((double) query_size);
-            double prob_token_corpus = scs_prob_corpus.get(token);
+            // #TODO Debug remove if no bugs!
+            //System.out.println(token+";"+Collections.frequency(tokens,token)+";"+query_size+";"+prob_token_query+";"+prob_token_corpus);
             scs += prob_token_query*Math.log(prob_token_query/prob_token_corpus);
         }
         return scs;
@@ -331,6 +334,40 @@ public class PreQueryCalc {
         avg_scq = sum_scq/query_terms;
         return new double[]{avg_scq,max_scq,sum_scq};
     }
+    // TODO Refactor this!!!
+    private double[] get_pmi_features(List<String> tokens) throws IOException {
+        double avg_pmi = 0;
+        double max_pmi = -Double.MAX_VALUE;
+        List<String> token_set = new ArrayList<>();
+        IndexSearcher searcher = new IndexSearcher(reader);
+        // strip of nonexisten tokens in corpus
+        for(String token: tokens){
+            if(corpus_termfrequency.get(token) != null) token_set.add(token);
+        }
+        for(String token_a: token_set){
+            for(String token_b: token_set){
+                if(token_a.equals(token_b)) continue;
+                TermQuery tq_a = new TermQuery(new Term("body",token_a));
+                TermQuery tq_b = new TermQuery(new Term("body",token_b));
+                BooleanQuery.Builder bqb = new BooleanQuery.Builder();
+                bqb.add(tq_a, BooleanClause.Occur.MUST);
+                bqb.add(tq_b, BooleanClause.Occur.MUST);
+                BooleanQuery bq = bqb.build();
+                TopDocs topDocs = searcher.search(bq,Integer.MAX_VALUE);
+                double intersect_token_a_token_b = topDocs.scoreDocs.length/((double) collection_size );
+                TopDocs topDocs1 = searcher.search(tq_a,Integer.MAX_VALUE);
+                double token_a_prob = topDocs1.scoreDocs.length/((double) collection_size);
+                TopDocs topDocs2 = searcher.search(tq_b,Integer.MAX_VALUE);
+                double token_b_prob = topDocs2.scoreDocs.length/((double) collection_size);
+                double tmp_pmi = Math.log(intersect_token_a_token_b/(token_a_prob*token_b_prob));
+                avg_pmi += tmp_pmi;
+                if(tmp_pmi>max_pmi) max_pmi = tmp_pmi;
+            }
+            avg_pmi = (2*(CombinatoricsUtils.factorial(token_set.size()-1))/CombinatoricsUtils.factorial(token_set.size()))*avg_pmi;
+            return new double[]{avg_pmi,max_pmi};
 
+        }
+
+    }
 
 }

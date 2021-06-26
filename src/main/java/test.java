@@ -22,9 +22,34 @@ import java.util.*;
 
 public class test {
 
-    public static void main(String[] args) throws Exception {
 
-        index_test();
+    public static void PreQueryTest() throws Exception{
+        File f = new File("mini_newsgroups/comp.sys.ibm.pc.hardware");
+        String[] pathname = f.list();
+        List<ImmutablePair<String, String>> documents = new ArrayList<>();
+        for (String name : pathname) {
+            String tmp = Files.readString(Path.of("mini_newsgroups/comp.sys.ibm.pc.hardware/" + name));
+            documents.add(new ImmutablePair<String, String>(name, tmp));
+        }
+        File f2 = new File("mini_newsgroups/comp.sys.mac.hardware");
+        String[] pathname2 = f2.list();
+        List<ImmutablePair<String, String>> documents2 = new ArrayList<>();
+        for (String name : pathname2) {
+            String tmp = Files.readString(Path.of("mini_newsgroups/comp.sys.mac.hardware/" + name));
+            documents2.add(new ImmutablePair<String, String>(name, tmp));
+        }
+        PreQueryCalc pre1 = new PreQueryCalc(documents);
+        Map<String,PreQueryCalc.PrequeryFeatures> features = new HashMap<>();
+        for(ImmutablePair<String,String> doc : documents2){
+            features.put(doc.left,pre1.get_prequery_features(doc.right));
+        }
+        for (Map.Entry<String, PreQueryCalc.PrequeryFeatures> entry : features.entrySet()){
+            System.out.println(entry.getValue().toString());
+        }
+    }
+    public static void main(String[] args) throws Exception {
+        PreQueryTest();
+        //index_test();
         //lucene_main(args[0]);
         /*Tokenizer sample = new AlphabeticTokenizer();
         String test_string = null;
