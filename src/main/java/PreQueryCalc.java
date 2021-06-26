@@ -363,7 +363,7 @@ public class PreQueryCalc {
                 avg_pmi += tmp_pmi;
                 if(tmp_pmi>max_pmi) max_pmi = tmp_pmi;
             }
-            avg_pmi = (2*(CombinatoricsUtils.factorial(token_set.size()-1))/CombinatoricsUtils.factorial(token_set.size()))*avg_pmi;
+            avg_pmi = (2*(CombinatoricsUtils.factorial(token_set.size()-1))/((double)CombinatoricsUtils.factorial(token_set.size())))*avg_pmi;
             return new double[]{avg_pmi,max_pmi};
 
         }
