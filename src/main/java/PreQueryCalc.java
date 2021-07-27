@@ -51,13 +51,15 @@ public class PreQueryCalc {
     }
     private List<ImmutablePair<String,String>> corpus;
     private int collection_size;
-    private Map<String,Long> corpus_termfrequency = new HashMap<>();
-    private Map<String,Map<String,Integer>> map_to_termfrequency_map = new HashMap<>();
-    private Map<String, Float> idf_map = new HashMap<>();
-    private Map<String, Integer> doc_length_map = new HashMap<>();
+    private final Map<String,Long> corpus_termfrequency = new HashMap<>();
+    private final Map<String,Map<String,Integer>> map_to_termfrequency_map = new HashMap<>();
+    private final Map<String, Float> idf_map = new HashMap<>();
+    private final Map<String, Integer> doc_length_map = new HashMap<>();
     private long total_tokens;
-    private Map<String,Double> scs_prob_corpus = new HashMap<>();
+    private final Map<String,Double> scs_prob_corpus = new HashMap<>();
     private IndexReader reader;
+    // tf-idf term vectors
+    private final Map<String,Double[]> document_term_vectors = new HashMap<>();
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException {
         this.corpus = corpus;
         reader = generate_index(corpus);
@@ -78,7 +80,7 @@ public class PreQueryCalc {
                 doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(),0)+ postings.freq());
                 tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
             }
-            // Put map with Frequency for Terms in all Documents in Termmap, so we can find get the Termmap via Term and then find frequency via Document title!
+            // Put map with Frequency for Terms in all Documents in Termmap, so we can find the Termmap via Term and then find frequency via Document title!
             map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
         }
 
@@ -88,6 +90,30 @@ public class PreQueryCalc {
         for(Map.Entry<String,Long> entry: corpus_termfrequency.entrySet()){
             scs_prob_corpus.put(entry.getKey(), ((double) entry.getValue())/total_tokens);
         }
+        // Generate vector space representation
+        int num_terms = corpus_termfrequency.size();
+        HashMap<String,Integer> term_to_vectorindex = new HashMap<>();
+        int i = 0;
+        for(Map.Entry<String,Long> entry:corpus_termfrequency.entrySet()){
+            term_to_vectorindex.put(entry.getKey(),i);
+            i++;
+        }
+        // fill document vectors with 0s and make Map
+        for(int j = 0; j< reader.maxDoc();j++){
+            Double[] term_vector = new Double[corpus_termfrequency.size()];
+            Arrays.fill(term_vector,0.0);
+            document_term_vectors.put(reader.document(j).get("title"),term_vector);
+        }
+        // get terms and change freq in corresponding vector index for all occurences.
+        for(Map.Entry<String,Long> entry:corpus_termfrequency.entrySet()){
+            int index = term_to_vectorindex.get(entry.getKey());
+            Map<String,Integer> tf_map = map_to_termfrequency_map.get(entry.getKey());
+            for(Map.Entry<String,Integer> tf_entry : tf_map.entrySet()){
+                // change this by using idf maybe?
+                document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue())* idf_map.get(tf_entry.getKey());
+            }
+        }
+
     }
 
     /**
@@ -136,6 +162,7 @@ public class PreQueryCalc {
         while (tokenStream.incrementToken()){
             tokens.add(attr.toString());
         }
+        // #TODO refactor this to filter tokens out first...
         features.idf_features = get_idf_features(tokens);
         features.ictf_features = get_ictf_features(tokens);
         features.entropy_features = get_entropy_features(tokens);
@@ -143,6 +170,7 @@ public class PreQueryCalc {
         features.scq_features = get_scq_features(tokens);
         features.query_scope = get_query_scope(tokens);
         features.simplified_clarity_score = get_sclarity_score(tokens);
+        features.pmi_features = get_pmi_features(tokens);
         return features;
     }
 
@@ -367,6 +395,38 @@ public class PreQueryCalc {
         }
         avg_pmi = (2*(CombinatoricsUtils.factorial(token_set.size()-1))/((double)CombinatoricsUtils.factorial(token_set.size())))*avg_pmi;
         return new double[]{avg_pmi,max_pmi};
+    }
+
+    private double get_coherence_score(List<String> tokens){
+        // # TODO factor out this inner looopsss....
+        // strip of nonexisten tokens in corpus
+        List<String> token_set = new ArrayList<>();
+        for(String token: tokens){
+            if(corpus_termfrequency.get(token) != null) token_set.add(token);
+        }
+        // get all  vectors with terms...
+        double coherence_score = 0d;
+        for(String token: token_set){
+            double tmp_score = 0d;
+            // get all documents containing term.
+            Map<String,Integer> tf_map =map_to_termfrequency_map.get(token);
+            // for all documents calculate the sum..
+            ArrayList<Map.Entry<String,Integer>> tf_list = new ArrayList<>(tf_map.entrySet());
+            for(int i = 0; i < tf_list.size();i++){
+                for(int j = i+1; j<tf_list.size();j++){
+                    Double[] vector_i = document_term_vectors.get(tf_list.get(i).getKey());
+                    Double[] vector_j = document_term_vectors.get(tf_list.get(j).getKey());
+                    //# TODO put this into single method
+                    double dot_product = 0d;
+                    for(int k = 0; k< vector_i.length;k++){
+                        dot_product += vector_i[k] +vector_j[k];
+                    }
+
+                    tmp_score =
+                }
+            }
+        }
+        return 0d;
     }
 
 }
