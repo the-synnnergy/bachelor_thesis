@@ -50,12 +50,18 @@ public class PreQueryCalc {
         }
     }
     private List<ImmutablePair<String,String>> corpus;
+    // number of documents in collection
     private int collection_size;
+    // Term frequency for all Terms. String is the term and long is the freq in the corpus altogether.
     private final Map<String,Long> corpus_termfrequency = new HashMap<>();
+    // Maps a term(String) to a Map cotaining the Documents Titles(String) and the freqs(Integer)
     private final Map<String,Map<String,Integer>> map_to_termfrequency_map = new HashMap<>();
+    // idf for all terms(String key)
     private final Map<String, Float> idf_map = new HashMap<>();
+    // maps the length for each document(String is title as key)
     private final Map<String, Integer> doc_length_map = new HashMap<>();
     private long total_tokens;
+    // term prob in corpus mapping
     private final Map<String,Double> scs_prob_corpus = new HashMap<>();
     private IndexReader reader;
     // tf-idf term vectors
