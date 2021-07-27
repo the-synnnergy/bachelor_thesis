@@ -162,6 +162,7 @@ public class PreQueryCalc {
         while (tokenStream.incrementToken()){
             tokens.add(attr.toString());
         }
+        tokens = remove_noncorpus_tokens(tokens);
         // #TODO refactor this to filter tokens out first...
         features.idf_features = get_idf_features(tokens);
         features.ictf_features = get_ictf_features(tokens);
@@ -174,6 +175,18 @@ public class PreQueryCalc {
         return features;
     }
 
+    /**
+     *
+     * @param tokens
+     * @return
+     */
+    private List<String> remove_noncorpus_tokens(List<String> tokens){
+        ArrayList<String> cleaned_tokens = new ArrayList<>();
+        for(String token: tokens){
+            if(corpus_termfrequency.get(token) != null) cleaned_tokens.add(token);
+        }
+        return cleaned_tokens;
+    }
     /**
      * Calculates the idf features for the given tokens!
      * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
@@ -418,15 +431,21 @@ public class PreQueryCalc {
                     Double[] vector_j = document_term_vectors.get(tf_list.get(j).getKey());
                     //# TODO put this into single method
                     double dot_product = 0d;
+                    double norm_i = 0d;
+                    double norm_j = 0d;
                     for(int k = 0; k< vector_i.length;k++){
                         dot_product += vector_i[k] +vector_j[k];
+                        norm_i += Math.pow(vector_i[k],2);
+                        norm_j += Math.pow(vector_j[k],2);
                     }
-
-                    tmp_score =
+                    norm_i = Math.sqrt(norm_i);
+                    norm_j = Math.sqrt(norm_j);
+                    tmp_score += dot_product/(norm_i*norm_j);
                 }
             }
+            coherence_score += tmp_score/(tf_list.size()* tf_list.size()-1);
         }
-        return 0d;
+        return coherence_score;
     }
 
 }
