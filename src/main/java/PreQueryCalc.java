@@ -178,6 +178,7 @@ public class PreQueryCalc {
         features.query_scope = get_query_scope(tokens);
         features.simplified_clarity_score = get_sclarity_score(tokens);
         features.pmi_features = get_pmi_features(tokens);
+        features.coherence_score = get_coherence_score(tokens);
         return features;
     }
 

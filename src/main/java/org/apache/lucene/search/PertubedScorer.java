@@ -26,7 +26,7 @@ import org.apache.lucene.index.SlowImpactsEnum;
  *
  * @lucene.internal
  */
-public final class PertubatedScorer extends Scorer {
+public final class PertubedScorer extends Scorer {
     private final PostingsEnum postingsEnum;
     private final ImpactsEnum impactsEnum;
     private final DocIdSetIterator iterator;
@@ -34,7 +34,7 @@ public final class PertubatedScorer extends Scorer {
     private final ImpactsDISI impactsDisi;
 
     /** Construct a {@link TermScorer} that will iterate all documents. */
-    public PertubatedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer) {
+    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer) {
         super(weight);
         iterator = this.postingsEnum = postingsEnum;
         impactsEnum = new SlowImpactsEnum(postingsEnum);
@@ -46,7 +46,7 @@ public final class PertubatedScorer extends Scorer {
      * Construct a {@link TermScorer} that will use impacts to skip blocks of non-competitive
      * documents.
      */
-    PertubatedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer) {
+    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer) {
         super(weight);
         postingsEnum = this.impactsEnum = impactsEnum;
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
