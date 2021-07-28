@@ -29,16 +29,13 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermState;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreMode;
-import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.similarities.Similarity;
 
 /**
  * A Query that matches documents containing a term. This may be combined with other terms with a
  * {@link BooleanQuery}.
  */
-public class CustomTermQuery extends Query {
+public class PertubatedQuery extends Query {
 
     private final Term term;
     private final TermStates perReaderTermState;
@@ -52,7 +49,7 @@ public class CustomTermQuery extends Query {
         public CustomTermWeight(
                 IndexSearcher searcher, ScoreMode scoreMode, float boost, TermStates termStates)
                 throws IOException {
-            super(CustomTermQuery.this);
+            super(PertubatedQuery.this);
             if (scoreMode.needsScores() && termStates == null) {
                 throw new IllegalStateException("termStates are required when scores are needed");
             }
@@ -106,7 +103,7 @@ public class CustomTermQuery extends Query {
 
         @Override
         public String toString() {
-            return "weight(" + CustomTermQuery.this + ")";
+            return "weight(" + PertubatedQuery.this + ")";
         }
 
         @Override
@@ -122,9 +119,9 @@ public class CustomTermQuery extends Query {
             LeafSimScorer scorer =
                     new LeafSimScorer(simScorer, context.reader(), term.field(), scoreMode.needsScores());
             if (scoreMode == ScoreMode.TOP_SCORES) {
-                return new CustomTermScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer);
+                return new PertubatedScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer);
             } else {
-                return new CustomTermScorer(
+                return new PertubatedScorer(
                         this,
                         termsEnum.postings(
                                 null, scoreMode.needsScores() ? PostingsEnum.FREQS : PostingsEnum.NONE),
@@ -166,7 +163,7 @@ public class CustomTermQuery extends Query {
 
         @Override
         public Explanation explain(LeafReaderContext context, int doc) throws IOException {
-            CustomTermScorer scorer = (CustomTermScorer) scorer(context);
+            PertubatedScorer scorer = (PertubatedScorer) scorer(context);
             if (scorer != null) {
                 int newDoc = scorer.iterator().advance(doc);
                 if (newDoc == doc) {
@@ -193,7 +190,7 @@ public class CustomTermQuery extends Query {
     }
 
     /** Constructs a query for the term <code>t</code>. */
-    public CustomTermQuery(Term t) {
+    public PertubatedQuery(Term t) {
         term = Objects.requireNonNull(t);
         perReaderTermState = null;
     }
@@ -202,7 +199,7 @@ public class CustomTermQuery extends Query {
      * Expert: constructs a TermQuery that will use the provided docFreq instead of looking up the
      * docFreq against the searcher.
      */
-    public CustomTermQuery(Term t, TermStates states) {
+    public PertubatedQuery(Term t, TermStates states) {
         assert states != null;
         term = Objects.requireNonNull(t);
         perReaderTermState = Objects.requireNonNull(states);
@@ -259,7 +256,7 @@ public class CustomTermQuery extends Query {
     /** Returns true iff <code>other</code> is equal to <code>this</code>. */
     @Override
     public boolean equals(Object other) {
-        return sameClassAs(other) && term.equals(((CustomTermQuery) other).term);
+        return sameClassAs(other) && term.equals(((PertubatedQuery) other).term);
     }
 
     @Override

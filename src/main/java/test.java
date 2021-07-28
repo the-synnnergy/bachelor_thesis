@@ -174,7 +174,7 @@ public class test {
         search.setSimilarity(new ClassicSimilarity());
         EnglishAnalyzer en = new EnglishAnalyzer();
         QueryBuilder qb = new QueryBuilder(en);
-        Query q = new CustomTermQuery(new Term("body", "video"));
+        Query q = new PertubatedQuery(new Term("body", "video"));
         // Create Query with Should from text
         /** Query q = qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
                 "From: glang@slee01.srl.ford.com (Gordon Lang)\n" +
