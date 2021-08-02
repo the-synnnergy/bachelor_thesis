@@ -40,11 +40,11 @@ public class PostQueryCalc {
         IndexSearcher searcher = new IndexSearcher(reader);
         features.clustering_tendency = get_clustering_tendency(query);
         features.first_rank_change = get_first_rank_change(query, searcher);
-        features.normalized_query_commitment = get_normalized_query_commitment(query);
+        features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
         features.robustness_score = get_robustness_score(query, searcher);
         features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
         features.subquery_overlap = get_subquery_overlap(query, searcher);
-        features.weighted_information_gain = get_weighted_information_gain(query);
+        features.weighted_information_gain = get_weighted_information_gain(query, searcher);
         return features;
     }
 
@@ -148,7 +148,7 @@ public class PostQueryCalc {
             // Calculate cosine sim for each
             for(int j = 0; j<hits.scoreDocs.length;j++){
                 if(j == i) continue;
-                double cos_score = cos_sim(document_to_termvectors.get(i),document_to_termvectors.get(j));
+                double cos_score = Util.cos_sim(Arrays.stream(document_to_termvectors.get(i)).mapToDouble(Double::doubleValue).toArray(), Arrays.stream(document_to_termvectors.get(j)).mapToDouble(Double::doubleValue).toArray());
                 cos_similarities.add(cos_score);
             }
             cos_similarities.sort(Comparator.naturalOrder());
@@ -175,7 +175,7 @@ public class PostQueryCalc {
         Query q = qb.createBooleanQuery("body", query);
         TopDocs top_hits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);
         //TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
-        List<String> query_terms = get_query_terms(query);
+        List<String> query_terms = Util.get_query_terms(query,corpus_terms, new EnglishAnalyzer());
         double lambda = 1/Math.sqrt(query_terms.size());
         double weighted_information_gain = 0;
         for(ScoreDoc scoreDoc: top_hits.scoreDocs){
@@ -224,4 +224,6 @@ public class PostQueryCalc {
         }
         return terms;
     }
+
+
 }
