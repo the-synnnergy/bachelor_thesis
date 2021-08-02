@@ -1,3 +1,5 @@
+package FeaturesCalc;
+
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -7,10 +9,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.util.QueryBuilder;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class PostQueryCalc {
     /**
@@ -30,6 +29,7 @@ public class PostQueryCalc {
     HashMap<Integer,Double[]> document_to_termvectors;
     private static final int MAX_HITS_SUBQUERY = 10;
     private static final int MAX_HITS_ROBUSTNESS_SCORE = 50;
+    private static final int MAX_HITS_WEIGHTED_INFORMATION_GAIN = 100;
     public PostQueryCalc(IndexReader reader) {
         this.reader = reader;
         // #TODO fill termvectors....
@@ -84,7 +84,7 @@ public class PostQueryCalc {
         for(ScoreDoc hit: initial_result.scoreDocs){
             ranked_list.add(hit.doc);
         }
-        List<Term> terms_list = extract_terms((BooleanQuery) bool_query);
+        List<Term> terms_list = extract_terms_boolean_query((BooleanQuery) bool_query);
         // construct pertubed query
         BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
         query_builder.setMinimumNumberShouldMatch(1);
@@ -114,7 +114,7 @@ public class PostQueryCalc {
         for(ScoreDoc hit: initial_result.scoreDocs){
             ranked_list.add(hit.doc);
         }
-        List<Term> terms_list = extract_terms((BooleanQuery) bool_query);
+        List<Term> terms_list = extract_terms_boolean_query((BooleanQuery) bool_query);
         // construct pertubed query
         BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
         query_builder.setMinimumNumberShouldMatch(1);
@@ -169,10 +169,22 @@ public class PostQueryCalc {
      * @param query
      * @return
      */
-    private double get_weighted_information_gain(String query, IndexSearcher searcher){
+    private double get_weighted_information_gain(String query, IndexSearcher searcher) throws IOException {
         // #TODO implement extracting of probalities per document etc.
-
-        return 0d;
+        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        Query q = qb.createBooleanQuery("body", query);
+        TopDocs top_hits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);
+        //TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
+        List<String> query_terms = get_query_terms(query);
+        double lambda = 1/Math.sqrt(query_terms.size());
+        double weighted_information_gain = 0;
+        for(ScoreDoc scoreDoc: top_hits.scoreDocs){
+            Map<String,Double> term_probabilities_document = per_document_probs.get(scoreDoc.doc);
+            for(String term: query_terms){
+                weighted_information_gain += lambda* Math.log(term_probabilities_document.getOrDefault(term,0.0d)/ term_probabilities_document.get(term));
+            }
+        }
+        return weighted_information_gain/top_hits.scoreDocs.length;
     }
 
     /**
@@ -205,11 +217,7 @@ public class PostQueryCalc {
         return tmp_upper_deviation / total_score_sum;
     }
 
-    private double get_weighted_information_gain(String query){
-        return 0d;
-    }
-
-    private List<Term> extract_terms(BooleanQuery query){
+    private List<Term> extract_terms_boolean_query(BooleanQuery query){
         List<Term> terms = new ArrayList<>();
         for(BooleanClause clause: query.clauses()){
             terms.add(((TermQuery)clause.getQuery()).getTerm());

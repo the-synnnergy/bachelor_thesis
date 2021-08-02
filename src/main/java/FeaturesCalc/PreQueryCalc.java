@@ -1,3 +1,5 @@
+package FeaturesCalc;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.CombinatoricsUtils;

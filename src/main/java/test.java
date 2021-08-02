@@ -1,4 +1,5 @@
 //import weka.*;
+import FeaturesCalc.PreQueryCalc;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
@@ -83,7 +84,7 @@ public class test {
             String tmp = Files.readString(Path.of("mini_newsgroups/comp.sys.ibm.pc.hardware/" + name));
             documents.add(new ImmutablePair<String, String>(name, tmp));
         }
-        SimilarityCalc calc = new SimilarityCalc(documents, Similarities.TF_IDF);
+        FeaturesCalc.SimilarityCalc calc = new FeaturesCalc.SimilarityCalc(documents, FeaturesCalc.Similarities.TF_IDF);
         Map<String,Float> results = calc.getCalculatedSimilarities("Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\\n\" +\n" +
                 "                \"From: glang@slee01.srl.ford.com (Gordon Lang)\\n\" +\n" +
                 "                \"Newsgroups: comp.sys.ibm.pc.hardware\\n\" +\n" +
