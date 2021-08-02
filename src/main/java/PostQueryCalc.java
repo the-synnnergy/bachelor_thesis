@@ -131,6 +131,7 @@ public class PostQueryCalc {
     }
 
     private double get_clustering_tendency(String query){
+
         return 0d;
     }
 
@@ -164,13 +165,45 @@ public class PostQueryCalc {
     }
 
 
+    /**
+     *
+     * @param query
+     * @return
+     */
+    private double get_weighted_information_gain(String query, IndexSearcher searcher){
+        // #TODO implement extracting of probalities per document etc.
 
-    private double get_weighted_information_gain(String query){
         return 0d;
     }
 
-    private double get_normalized_query_commitment(String query){
-        return 0d;
+    /**
+     *
+     * @param query
+     * @param searcher
+     * @return
+     * @throws IOException
+     */
+    private double get_normalized_query_commitment(String query, IndexSearcher searcher) throws IOException {
+        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        Query q = qb.createBooleanQuery("body",query);
+        TopDocs top_hits = searcher.search(q,100);
+        TopDocs all_hits = searcher.search(q,Integer.MAX_VALUE);
+        double mu = 0;
+        for(ScoreDoc score_doc:top_hits.scoreDocs){
+            mu += score_doc.score;
+        }
+        mu = mu/top_hits.scoreDocs.length;
+        double total_score_sum = 0;
+        for(ScoreDoc scoreDoc: all_hits.scoreDocs){
+            total_score_sum += scoreDoc.score;
+        }
+        double tmp_upper_deviation = 0;
+        for(ScoreDoc score_doc:top_hits.scoreDocs){
+            tmp_upper_deviation += Math.pow((score_doc.score-mu),2);
+        }
+        tmp_upper_deviation = tmp_upper_deviation/100;
+        tmp_upper_deviation = Math.sqrt(tmp_upper_deviation);
+        return tmp_upper_deviation/total_score_sum;
     }
 
     private List<Term> extract_terms(BooleanQuery query){
