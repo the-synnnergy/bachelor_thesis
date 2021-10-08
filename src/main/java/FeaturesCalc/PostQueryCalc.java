@@ -1,3 +1,4 @@
+/*
 package FeaturesCalc;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
@@ -10,11 +11,14 @@ import org.apache.lucene.util.QueryBuilder;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PostQueryCalc {
-    /**
+    */
+/**
      * Class for storing the features, so they can be returned and then easily extracted.
-     */
+     *//*
+
     public class PostQueryFeatures{
         double subquery_overlap;
         double robustness_score;
@@ -30,6 +34,8 @@ public class PostQueryCalc {
     private static final int MAX_HITS_SUBQUERY = 10;
     private static final int MAX_HITS_ROBUSTNESS_SCORE = 50;
     private static final int MAX_HITS_WEIGHTED_INFORMATION_GAIN = 100;
+    private static final int MAX_HITS_CLUSTERING = 100;
+    private int collection_size;
     public PostQueryCalc(IndexReader reader) {
         this.reader = reader;
         // #TODO fill termvectors....
@@ -38,7 +44,7 @@ public class PostQueryCalc {
     public PostQueryFeatures get_PostQueryFeatures(String query) throws IOException {
         PostQueryFeatures features = new PostQueryFeatures();
         IndexSearcher searcher = new IndexSearcher(reader);
-        features.clustering_tendency = get_clustering_tendency(query);
+        features.clustering_tendency = get_clustering_tendency(query,searcher);
         features.first_rank_change = get_first_rank_change(query, searcher);
         features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
         features.robustness_score = get_robustness_score(query, searcher);
@@ -48,13 +54,15 @@ public class PostQueryCalc {
         return features;
     }
 
-    /**
+    */
+/**
      *
      * @param query
      * @param searcher
      * @return
      * @throws IOException
-     */
+     *//*
+
     private double get_subquery_overlap(String query, IndexSearcher searcher) throws IOException {
         // get first then hits from query.
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
@@ -75,7 +83,7 @@ public class PostQueryCalc {
         }
         return new StandardDeviation().evaluate(overlapping_results.stream().mapToDouble(Double::doubleValue).toArray());
     }
-
+    // #TODO do real pertubed query
     private double get_robustness_score(String query, IndexSearcher searcher) throws IOException {
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
         Query bool_query = qb.createBooleanQuery("body",query);
@@ -104,7 +112,7 @@ public class PostQueryCalc {
         }
         return spearman_rank_correlations.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
     }
-
+    // TODO get real pertubed query results.
     private double get_first_rank_change(String query, IndexSearcher searcher) throws IOException {
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
         Query bool_query = qb.createBooleanQuery("body",query);
@@ -130,7 +138,74 @@ public class PostQueryCalc {
         return first_rank_change_sum;
     }
 
-    private double get_clustering_tendency(String query){
+    private double get_clustering_tendency(String query, IndexSearcher searcher) throws IOException {
+        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        Query bool_query = qb.createBooleanQuery("body",query);
+        TopDocs top100 = searcher.search(bool_query,MAX_HITS_CLUSTERING);
+        Set<Integer> doc_ids = new HashSet<>();
+        for(ScoreDoc top_doc : top100.scoreDocs){
+            doc_ids.add(top_doc.doc);
+        }
+        Set<Integer> sampleable_points = new HashSet<>();
+        TopDocs all_docs = searcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE);
+        for(ScoreDoc scoredoc : all_docs.scoreDocs){
+            sampleable_points.add(scoredoc.doc);
+        }
+        // Now its time to remove all Docs already in the top 100 from sampling!
+        sampleable_points.removeAll(doc_ids);
+        int sampled_point = sampleable_points.stream().skip(ThreadLocalRandom.current().nextInt(sampleable_points.size())).findFirst().orElseThrow();
+        Query sampled_point_query = qb.createBooleanQuery(reader.document(sampled_point).get("body"),"body");
+        TopDocs result_docs = searcher.search(sampled_point_query,Integer.MAX_VALUE);
+        int marked_point = 0;
+        for(ScoreDoc result : result_docs.scoreDocs){
+            if(doc_ids.contains(result.doc)){
+                marked_point = result.doc;
+                break;
+            }
+        }
+        int marked_point_index = 0;
+        for(int i = 0;i < top100.scoreDocs.length;i++){
+            if(top100.scoreDocs[i].doc == marked_point){
+                marked_point_index = i;
+                System.out.println("Found marked point");
+                break;
+            }
+        }
+        int nearest_neighbor = 0;
+        switch (marked_point_index){
+            case 0:
+                nearest_neighbor = 1;
+                break;
+            case MAX_HITS_CLUSTERING:
+                nearest_neighbor = MAX_HITS_CLUSTERING-1;
+                break;
+            default:
+                if(top100.scoreDocs[marked_point_index-1].score > (top100.scoreDocs[marked_point_index+1].score)){
+                    nearest_neighbor = marked_point_index-1;
+                }else{
+                    nearest_neighbor = marked_point_index+1;
+                }
+        }
+
+        // TODO get maximum weight for terms across documents...
+        List<Term> terms = extract_terms_boolean_query(((BooleanQuery) bool_query));
+        class Result{
+            TopDocs topDocs;
+            Term term;
+        }
+        List<Result> results= new ArrayList<>();
+        for(Term term : terms){
+            Result result = new Result();
+            result.topDocs = searcher.search(new TermQuery(term),Integer.MAX_VALUE);
+            result.term = term;
+            results.add(result);
+        }
+        Map<String,Double> diff_between_max_min_weight = new HashMap<>();
+        for(Result r : results){
+            double max = Arrays.stream(r.topDocs.scoreDocs).max((scoreDoc) -> scoreDoc.score);
+        }
+
+
         return 0d;
     }
 
@@ -164,11 +239,13 @@ public class PostQueryCalc {
     }
 
 
-    /**
+    */
+/**
      *
      * @param query
      * @return
-     */
+     *//*
+
     private double get_weighted_information_gain(String query, IndexSearcher searcher) throws IOException {
         // #TODO implement extracting of probalities per document etc.
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
@@ -187,13 +264,15 @@ public class PostQueryCalc {
         return weighted_information_gain/top_hits.scoreDocs.length;
     }
 
-    /**
+    */
+/**
      *
      * @param query
      * @param searcher
      * @return
      * @throws IOException
-     */
+     *//*
+
     private double get_normalized_query_commitment(String query, IndexSearcher searcher) throws IOException {
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
         Query q = qb.createBooleanQuery("body", query);
@@ -227,3 +306,4 @@ public class PostQueryCalc {
 
 
 }
+*/

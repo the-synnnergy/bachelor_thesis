@@ -121,13 +121,13 @@ public class PertubedQuery extends Query {
             LeafSimScorer scorer =
                     new LeafSimScorer(simScorer, context.reader(), term.field(), scoreMode.needsScores());
             if (scoreMode == ScoreMode.TOP_SCORES) {
-                return new PertubedScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer);
+                return new PertubedScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer, documents_to_pertubate);
             } else {
                 return new PertubedScorer(
                         this,
                         termsEnum.postings(
                                 null, scoreMode.needsScores() ? PostingsEnum.FREQS : PostingsEnum.NONE),
-                        scorer);
+                        scorer, documents_to_pertubate);
             }
         }
 

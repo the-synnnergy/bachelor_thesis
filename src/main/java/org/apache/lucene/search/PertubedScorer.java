@@ -17,6 +17,9 @@
 package org.apache.lucene.search;
 
 import java.io.IOException;
+import java.util.List;
+
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.lucene.index.ImpactsEnum;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.SlowImpactsEnum;
@@ -32,26 +35,28 @@ public final class PertubedScorer extends Scorer {
     private final DocIdSetIterator iterator;
     private final LeafSimScorer docScorer;
     private final ImpactsDISI impactsDisi;
-
+    private final List<Integer> documents_to_pertubate;
     /** Construct a {@link TermScorer} that will iterate all documents. */
-    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer) {
+    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed) {
         super(weight);
         iterator = this.postingsEnum = postingsEnum;
         impactsEnum = new SlowImpactsEnum(postingsEnum);
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
         this.docScorer = docScorer;
+        this.documents_to_pertubate = documents_to_perturbed;
     }
 
     /**
      * Construct a {@link TermScorer} that will use impacts to skip blocks of non-competitive
      * documents.
      */
-    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer) {
+    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed) {
         super(weight);
         postingsEnum = this.impactsEnum = impactsEnum;
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
         iterator = impactsDisi;
         this.docScorer = docScorer;
+        this.documents_to_pertubate = documents_to_perturbed;
     }
 
     @Override
@@ -72,7 +77,11 @@ public final class PertubedScorer extends Scorer {
     @Override
     public float score() throws IOException {
         assert docID() != DocIdSetIterator.NO_MORE_DOCS;
-        return 3;//docScorer.score(postingsEnum.docID(), postingsEnum.freq());
+        // TODO change this to a random Poisson
+        if(documents_to_pertubate.contains(docID())){
+            return docScorer.score(postingsEnum.docID(),new PoissonDistribution(postingsEnum.freq()).sample());
+        }
+        return docScorer.score(postingsEnum.docID(), postingsEnum.freq());
     }
 
     //@Override

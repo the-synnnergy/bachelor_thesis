@@ -49,8 +49,8 @@ public class test {
         }
     }
     public static void main(String[] args) throws Exception {
-        PreQueryTest();
-        //index_test();
+        //PreQueryTest();
+        index_test();
         //lucene_main(args[0]);
         /*Tokenizer sample = new AlphabeticTokenizer();
         String test_string = null;
@@ -149,7 +149,7 @@ public class test {
             field.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
             Field fd = new Field("body", tmp, field);
             doc.add(fd);
-            System.out.println(fd.stringValue());
+            //System.out.println(fd.stringValue());
             doc.add(new StringField("name", name, Field.Store.YES));
             writer.addDocument(doc);
             List<IndexableField> fields = doc.getFields();
@@ -175,7 +175,9 @@ public class test {
         search.setSimilarity(new ClassicSimilarity());
         EnglishAnalyzer en = new EnglishAnalyzer();
         QueryBuilder qb = new QueryBuilder(en);
-        Query q = new PertubedQuery(new Term("body", "video"), (List<Integer>) null);
+        List<Integer> docs = new ArrayList<>();
+        docs.add(57);
+        Query q = new PertubedQuery(new Term("body", "video"),docs);
         // Create Query with Should from text
         /** Query q = qb.createBooleanQuery("body", "Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!ogicse!emory!swrinde!sdd.hp.com!nigel.msen.com!fmsrl7!glang\n" +
                 "From: glang@slee01.srl.ford.com (Gordon Lang)\n" +
@@ -208,7 +210,7 @@ public class test {
             int docId = scored.doc;
             float luceneScore = scored.score;
             Document doc = search.doc(docId);
-            //System.out.println(luceneScore+" "+doc.get("name"));
+            System.out.println(luceneScore+" "+ docId);
             //System.out.println(search.explain(q, docId));
         }
         //System.out.println(search.explain(q,scoreDocs[1].doc));
