@@ -4,17 +4,15 @@ import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.*;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
 public class Util {
     public static List<Term> extract_terms_boolean_query(BooleanQuery query){
@@ -55,7 +53,38 @@ public class Util {
         return cleaned_tokens;
     }
 
-    public static Map<String, Double> get_document_vectors(IndexReader reader) {
-        return null;
-    }
+    /**
+     * returns a map with the term vectors for each document. Mapping from docid to Termvectorarray
+     * @param reader
+     * @return
+     */
+    public static Map<Integer, int[]> get_document_vectors(IndexReader reader) throws IOException {
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        Map<Integer,int[]> document_vectors = new HashMap<>();
+        int length = 0;
+        while(all_terms_it.next() != null){
+            length++;
+        }
+        int num_docs = reader.numDocs();
+        // try this if not working change #TODO
+        for(int i = 0; i < num_docs;i++){
+            int[] term_vector = new int[length];
+            document_vectors.put(i,term_vector);
+        }
+        all_terms_it = all_terms.iterator();
+        int pos = 0;
+        while (all_terms_it.next() != null){
+            PostingsEnum postings = all_terms_it.postings(null);
+            int doc_id = 0;
+            while ((doc_id = postings.nextDoc()) != NO_MORE_DOCS){
+                int[] term_vector = document_vectors.get(doc_id);
+                term_vector[pos] = postings.freq();
+                document_vectors.put(doc_id,term_vector);
+            }
+            System.out.println(pos+":"+all_terms_it.term().utf8ToString());
+            pos++;
+        }
+        return document_vectors;
+    };
 }

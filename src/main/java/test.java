@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import static FeaturesCalc.Util.get_document_vectors;
+
 public class test {
 
 
@@ -210,7 +212,7 @@ public class test {
             int docId = scored.doc;
             float luceneScore = scored.score;
             Document doc = search.doc(docId);
-            System.out.println(luceneScore+" "+ docId);
+            //System.out.println(luceneScore+" "+ docId);
             //System.out.println(search.explain(q, docId));
         }
         //System.out.println(search.explain(q,scoreDocs[1].doc));
@@ -242,6 +244,11 @@ public class test {
         while (all_enum.next() != null){
             //System.out.println(all_enum.term().utf8ToString());
         }
+        Map<Integer,int[]> test_map = get_document_vectors(reader);
+        int[] test_int = test_map.get(0);
+        System.out.println(reader.document(0).getField("body").stringValue());
+        System.out.println("Term Vectors now");
+        System.out.println(test_int[1685]);
         writer.close();
         directory.close();
 

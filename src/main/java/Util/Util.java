@@ -1,6 +1,8 @@
 package Util;
 public class Util {
 
+
+
     public final static int FEATURE_COUNT = 32;
     /**
      * Magic Number Definitions for the Query Features
