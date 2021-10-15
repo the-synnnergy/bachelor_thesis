@@ -3,10 +3,12 @@ package FeaturesCalc;
 import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 
 import java.io.IOException;
@@ -58,7 +60,8 @@ public class Util {
      * @param reader
      * @return
      */
-    public static Map<Integer, int[]> get_document_vectors(IndexReader reader) throws IOException {
+    // #TODO do IDF at end!!!!
+    public static Map<Integer, int[]> get_idf_document_vectors(IndexReader reader) throws IOException {
         Terms all_terms = MultiTerms.getTerms(reader,"body");
         TermsEnum all_terms_it = all_terms.iterator();
         Map<Integer,int[]> document_vectors = new HashMap<>();
@@ -86,5 +89,35 @@ public class Util {
             pos++;
         }
         return document_vectors;
+    };
+
+    public static Map<Integer,String> get_termvector_terms(IndexReader reader) throws IOException{
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        Map<Integer,String> termvector_terms = new HashMap<>();
+        int i = 0;
+        while (all_terms_it.next() != null){
+            termvector_terms.put(i,all_terms_it.term().utf8ToString());
+            i++;
+        }
+        return termvector_terms;
+    };
+
+    // #TODO get idf termvectors!!!
+    public static int[] get_query_idf_termvector(String query, IndexReader reader) throws IOException {
+        Analyzer anal = new EnglishAnalyzer();
+        TokenStream tokenStream = anal.tokenStream("body", query);
+        Map<String, Integer>  token_counts = new HashMap<>();
+        CharTermAttribute attr = tokenStream.addAttribute(CharTermAttribute.class);
+        tokenStream.reset();
+        while (tokenStream.incrementToken()) {
+           token_counts.merge(attr.toString(),1,Integer::sum);
+        }
+        Map<Integer,String> termvector_ids = get_termvector_terms(reader);
+        int[] termvector = new int[termvector_ids.size()];
+        for(int i = 0;i < termvector.length;i++){
+            termvector[i] = token_counts.getOrDefault(termvector_ids.get(i),0);
+        }
+        return  termvector;
     };
 }

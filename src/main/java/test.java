@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static FeaturesCalc.Util.get_document_vectors;
+import static FeaturesCalc.Util.get_idf_document_vectors;
 
 public class test {
 
@@ -244,7 +244,7 @@ public class test {
         while (all_enum.next() != null){
             //System.out.println(all_enum.term().utf8ToString());
         }
-        Map<Integer,int[]> test_map = get_document_vectors(reader);
+        Map<Integer,int[]> test_map = get_idf_document_vectors(reader);
         int[] test_int = test_map.get(0);
         System.out.println(reader.document(0).getField("body").stringValue());
         System.out.println("Term Vectors now");
