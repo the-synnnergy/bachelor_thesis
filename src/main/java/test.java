@@ -244,8 +244,8 @@ public class test {
         while (all_enum.next() != null){
             //System.out.println(all_enum.term().utf8ToString());
         }
-        Map<Integer,int[]> test_map = get_idf_document_vectors(reader);
-        int[] test_int = test_map.get(0);
+        Map<Integer, double[]> test_map = get_idf_document_vectors(reader);
+        double[] test_int = test_map.get(0);
         System.out.println(reader.document(0).getField("body").stringValue());
         System.out.println("Term Vectors now");
         System.out.println(test_int[1685]);

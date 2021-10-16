@@ -155,7 +155,7 @@ public class PostQueryCalc {
         }
         // Now its time to remove all Docs already in the top 100 from sampling!
         sampleable_points.removeAll(doc_ids);
-        Map<Integer,int[]> term_vectors = get_idf_document_vectors(reader);
+        Map<Integer, double[]> term_vectors = get_idf_document_vectors(reader);
         double mean = 0;
         for(int i = 0; i<100;i++){
             mean += get_sim_query_for_mean(sampleable_points, searcher, doc_ids, top100, term_vectors, query);
@@ -182,11 +182,11 @@ public class PostQueryCalc {
         }*/
         //Map<Integer,int[]> document_vectors =get_document_vectors(reader);
         int termvector_length = term_vectors.get(0).length;
-        int[] max = new int[termvector_length];
-        int[] min = new int[termvector_length];
+        double[] max = new double[termvector_length];
+        double[] min = new double[termvector_length];
         Arrays.fill(min,Integer.MAX_VALUE);
         for (ScoreDoc scoreDoc: top100.scoreDocs){
-            int[] termvector = term_vectors.get(scoreDoc.doc);
+            double[] termvector = term_vectors.get(scoreDoc.doc);
             for(int i = 0;i<termvector_length;i++){
                 if(termvector[i] > max[i]) max[i] = termvector[i];
                 if(termvector[i] < min[i]) min[i] = termvector[i];
@@ -196,10 +196,10 @@ public class PostQueryCalc {
         for(int i = 0;i<termvector_length;i++){
             sum +=max[i] -min[i];
         }
-        return mean*(1/termvector_length)*sum;
+        return mean*(1.0d/termvector_length)*sum;
     }
 
-    private double get_sim_query_for_mean(Set<Integer> sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, int[]> term_vectors, String query) throws IOException {
+    private double get_sim_query_for_mean(Set<Integer> sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException {
         int sampled_point = sampleable_points.stream().skip(ThreadLocalRandom.current().nextInt(sampleable_points.size())).findFirst().orElseThrow();
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
         Query sampled_point_query = qb.createBooleanQuery(reader.document(sampled_point).get("body"), "body");
@@ -246,7 +246,7 @@ public class PostQueryCalc {
        return sim_query_dmp_dnn/sim_query_psp_dmp;
     }
 
-    private double calc_sim_query(int[] first, int[] second, int[] query_termvector) {
+    private double calc_sim_query(double[] first, double[] second, double[] query_termvector) {
         // maybe do some assertions here
         assert query_termvector.length == first.length;
         assert first.length == second.length;

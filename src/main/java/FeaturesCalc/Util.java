@@ -8,7 +8,6 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 
 import java.io.IOException;
@@ -61,28 +60,32 @@ public class Util {
      * @return
      */
     // #TODO do IDF at end!!!!
-    public static Map<Integer, int[]> get_idf_document_vectors(IndexReader reader) throws IOException {
+    public static Map<Integer, double[]> get_idf_document_vectors(IndexReader reader) throws IOException {
         Terms all_terms = MultiTerms.getTerms(reader,"body");
         TermsEnum all_terms_it = all_terms.iterator();
-        Map<Integer,int[]> document_vectors = new HashMap<>();
+        Map<Integer, double[]> document_vectors = new HashMap<>();
         int length = 0;
         while(all_terms_it.next() != null){
+
             length++;
         }
         int num_docs = reader.numDocs();
-        // try this if not working change #TODO
         for(int i = 0; i < num_docs;i++){
-            int[] term_vector = new int[length];
+            double[] term_vector = new double[length];
             document_vectors.put(i,term_vector);
         }
         all_terms_it = all_terms.iterator();
         int pos = 0;
+
         while (all_terms_it.next() != null){
+            long total_freq = all_terms_it.totalTermFreq();
+            long doc_freq = all_terms_it.docFreq();
             PostingsEnum postings = all_terms_it.postings(null);
             int doc_id = 0;
+            double idf = (1+Math.log(((double) doc_freq+1)/(total_freq+1)));
             while ((doc_id = postings.nextDoc()) != NO_MORE_DOCS){
-                int[] term_vector = document_vectors.get(doc_id);
-                term_vector[pos] = postings.freq();
+                double[] term_vector = document_vectors.get(doc_id);
+                term_vector[pos] = postings.freq()*idf;
                 document_vectors.put(doc_id,term_vector);
             }
             System.out.println(pos+":"+all_terms_it.term().utf8ToString());
@@ -103,8 +106,21 @@ public class Util {
         return termvector_terms;
     };
 
+    public static double[] get_idf_termvectors(IndexReader reader) throws IOException{
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        // well better assume our terms arent going to explode! :)
+        double[] idf_termvector = new double[(int) all_terms.size()];
+        int i = 0;
+        while (all_terms_it.next() != null) {
+            idf_termvector[i] = (1+Math.log(((double) all_terms_it.docFreq()+1)/(all_terms_it.totalTermFreq()+1)));
+            i++;
+        }
+        return idf_termvector;
+    };
+
     // #TODO get idf termvectors!!!
-    public static int[] get_query_idf_termvector(String query, IndexReader reader) throws IOException {
+    public static double[] get_query_idf_termvector(String query, IndexReader reader) throws IOException {
         Analyzer anal = new EnglishAnalyzer();
         TokenStream tokenStream = anal.tokenStream("body", query);
         Map<String, Integer>  token_counts = new HashMap<>();
@@ -114,9 +130,9 @@ public class Util {
            token_counts.merge(attr.toString(),1,Integer::sum);
         }
         Map<Integer,String> termvector_ids = get_termvector_terms(reader);
-        int[] termvector = new int[termvector_ids.size()];
+        double[] termvector = get_idf_termvectors(reader);
         for(int i = 0;i < termvector.length;i++){
-            termvector[i] = token_counts.getOrDefault(termvector_ids.get(i),0);
+            termvector[i] = token_counts.getOrDefault(termvector_ids.get(i),0)*termvector[i];
         }
         return  termvector;
     };
