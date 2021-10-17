@@ -313,9 +313,10 @@ public class PostQueryCalc {
         Query q = qb.createBooleanQuery("body", query);
         TopDocs top_hits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);
         //TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
-        List<String> query_terms = Util.get_query_terms(query,corpus_terms, new EnglishAnalyzer());
+        List<String> query_terms = Util.get_query_terms(query,reader, new EnglishAnalyzer());
         double lambda = 1/Math.sqrt(query_terms.size());
         double weighted_information_gain = 0;
+        Map<Integer,Map<String,Double>> per_document_probs = Util.get_document_probs(reader);
         for(ScoreDoc scoreDoc: top_hits.scoreDocs){
             Map<String,Double> term_probabilities_document = per_document_probs.get(scoreDoc.doc);
             for(String term: query_terms){

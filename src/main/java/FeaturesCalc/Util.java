@@ -12,6 +12,7 @@ import org.apache.lucene.search.TermQuery;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.DoubleStream;
 
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
@@ -39,8 +40,14 @@ public class Util {
         return dot_product/(norm_i*norm_j);
     }
 
-    public static List<String> get_query_terms(String query, Collection<String> corpus_terms, Analyzer anal) throws IOException {
+    public static List<String> get_query_terms(String query, IndexReader reader, Analyzer anal) throws IOException {
         TokenStream tokenStream = anal.tokenStream("body", query);
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        Set<String> terms = new HashSet<>();
+        while (all_terms_it.next() != null){
+            terms.add(all_terms_it.term().utf8ToString());
+        }
         List<String> tokens = new ArrayList<>();
         CharTermAttribute attr = tokenStream.addAttribute(CharTermAttribute.class);
         tokenStream.reset();
@@ -49,7 +56,7 @@ public class Util {
         }
         ArrayList<String> cleaned_tokens = new ArrayList<>();
         for (String token : tokens) {
-            if (corpus_terms.contains(token)) cleaned_tokens.add(token);
+            if (terms.contains(token)) cleaned_tokens.add(token);
         }
         return cleaned_tokens;
     }
@@ -136,4 +143,55 @@ public class Util {
         }
         return  termvector;
     };
+
+    public static Map<Integer, Map<String, Double>> get_document_probs(IndexReader reader) throws IOException {
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        Map<Integer, double[]> document_vectors = new HashMap<>();
+        Map<Integer,String> terms_map = get_termvector_terms(reader);
+        Map<Integer,Map<String,Double>> doc_probs = new HashMap<>();
+        int num_docs = reader.numDocs();
+        int length = 0;
+        while(all_terms_it.next() != null){
+
+            length++;
+        }
+
+        for(int i = 0; i < num_docs;i++){
+            double[] term_vector = new double[length];
+            document_vectors.put(i,term_vector);
+        }
+        all_terms_it = all_terms.iterator();
+        int pos = 0;
+        while (all_terms_it.next() != null){
+            PostingsEnum postings = all_terms_it.postings(null);
+            int doc_id = 0;
+            while ((doc_id = postings.nextDoc()) != NO_MORE_DOCS){
+                double[] term_vector = document_vectors.get(doc_id);
+                term_vector[pos] = postings.freq();
+                document_vectors.put(doc_id,term_vector);
+            }
+            //System.out.println(pos+":"+all_terms_it.term().utf8ToString());
+            pos++;
+        }
+        for(int i = 0; i< num_docs;i++){
+            double[] term_vector = calc_prob_vector(document_vectors.get(i));
+            Map<String,Double> probs = new HashMap<>();
+            for(int j = 0;j<term_vector.length;j++){
+                probs.put(terms_map.get(j),term_vector[j]);
+            }
+            doc_probs.put(i,probs);
+        }
+        return doc_probs;
+    }
+
+    private static double[] calc_prob_vector(double[] termvector) {
+        double freq_sum = DoubleStream.of(termvector).sum();
+        for(int i = 0; i < termvector.length;i++){
+            termvector[i] = termvector[i]/freq_sum;
+        }
+        return termvector;
+    }
+
+    ;
 }
