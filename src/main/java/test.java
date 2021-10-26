@@ -1,4 +1,6 @@
 //import weka.*;
+
+import FeaturesCalc.PostQueryCalc;
 import FeaturesCalc.PreQueryCalc;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.lucene.analysis.Analyzer;
@@ -6,10 +8,12 @@ import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
-//import org.apache.lucene.core.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.LMJelinekMercerSimilarity;
 import org.apache.lucene.store.FSDirectory;
@@ -22,6 +26,8 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static FeaturesCalc.Util.get_idf_document_vectors;
+
+//import org.apache.lucene.core.*;
 
 public class test {
 
@@ -249,6 +255,10 @@ public class test {
         System.out.println(reader.document(0).getField("body").stringValue());
         System.out.println("Term Vectors now");
         System.out.println(test_int[1685]);
+        PostQueryCalc pq = new PostQueryCalc(reader);
+        PostQueryCalc.PostQueryFeatures pqc = pq.get_PostQueryFeatures("video recorder");
+        pqc.print();
+
         writer.close();
         directory.close();
 

@@ -117,7 +117,13 @@ public class Util {
         Terms all_terms = MultiTerms.getTerms(reader,"body");
         TermsEnum all_terms_it = all_terms.iterator();
         // well better assume our terms arent going to explode! :)
-        double[] idf_termvector = new double[(int) all_terms.size()];
+        //System.out.println("Count of Terms:"+all_terms.size());
+        int length = 0;
+        while (all_terms_it.next() != null){
+            length++;
+        }
+        //System.out.println("lenght"+length);
+        double[] idf_termvector = new double[length];
         int i = 0;
         while (all_terms_it.next() != null) {
             idf_termvector[i] = (1+Math.log(((double) all_terms_it.docFreq()+1)/(all_terms_it.totalTermFreq()+1)));
