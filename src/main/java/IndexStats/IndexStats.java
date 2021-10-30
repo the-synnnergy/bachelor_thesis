@@ -1,3 +1,4 @@
+/*
 package IndexStats;
 
 import org.apache.lucene.index.IndexReader;
@@ -33,3 +34,4 @@ public class IndexStats {
 
 
 }
+*/

@@ -1,6 +1,7 @@
 
 package FeaturesCalc;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -28,18 +29,29 @@ public class PostQueryCalc {
         double spatial_autocorrelation;
         double weighted_information_gain;
         double normalized_query_commitment;
+
+        public void print(){
+            System.out.println("subquery_overlap:"+subquery_overlap);
+            System.out.println("robustness_score:"+robustness_score);
+            System.out.println("first_rank_change:"+first_rank_change);
+            System.out.println("clustering_tendency:"+clustering_tendency);
+            System.out.println("spatial_autocorreleation:"+spatial_autocorrelation);
+            System.out.println("WIG:"+weighted_information_gain);
+            System.out.println("Normalized query commitment:"+normalized_query_commitment);
+        }
     }
 
     IndexReader reader;
-    HashMap<Integer, Double[]> document_to_termvectors;
+    Map<Integer, double[]> document_to_termvectors;
     private static final int MAX_HITS_SUBQUERY = 10;
     private static final int MAX_HITS_ROBUSTNESS_SCORE = 50;
     private static final int MAX_HITS_WEIGHTED_INFORMATION_GAIN = 100;
     private static final int MAX_HITS_CLUSTERING = 100;
     private int collection_size;
 
-    public PostQueryCalc(IndexReader reader) {
+    public PostQueryCalc(IndexReader reader) throws IOException {
         this.reader = reader;
+        document_to_termvectors = Util.get_idf_document_vectors(reader);
         // #TODO fill termvectors....
     }
 
@@ -202,7 +214,7 @@ public class PostQueryCalc {
     private double get_sim_query_for_mean(Set<Integer> sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException {
         int sampled_point = sampleable_points.stream().skip(ThreadLocalRandom.current().nextInt(sampleable_points.size())).findFirst().orElseThrow();
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
-        Query sampled_point_query = qb.createBooleanQuery(reader.document(sampled_point).get("body"), "body");
+        Query sampled_point_query = qb.createBooleanQuery("body",(reader.document(sampled_point).get("body")));
         TopDocs result_docs = searcher.search(sampled_point_query, Integer.MAX_VALUE);
         int marked_point = 0;
         for (ScoreDoc result : result_docs.scoreDocs) {
@@ -215,7 +227,7 @@ public class PostQueryCalc {
         for (int i = 0; i < top100.scoreDocs.length; i++) {
             if (top100.scoreDocs[i].doc == marked_point) {
                 marked_point_index = i;
-                System.out.println("Found marked point");
+                //System.out.println("Found marked point");
                 break;
             }
         }
@@ -236,18 +248,19 @@ public class PostQueryCalc {
         }
         int nearest_neighbor_doc_id = top100.scoreDocs[nearest_neighbor].doc;
         int marked_point_doc_id = top100.scoreDocs[marked_point_index].doc;
-        Map<Integer,String> terms_to_vectorid = get_termvector_terms(reader);
-
+        //System.out.println(term_vectors.get(nearest_neighbor_doc_id)[265]);
+        //System.out.println(marked_point_doc_id);
         double sim_query_dmp_dnn = calc_sim_query(term_vectors.get(marked_point_doc_id),term_vectors.get(nearest_neighbor_doc_id), get_query_idf_termvector(query, reader));
         double sim_query_psp_dmp = calc_sim_query(term_vectors.get(sampled_point),term_vectors.get(marked_point_doc_id), get_query_idf_termvector(query,reader));
 
 
-
+        //System.out.println("sim query results:"+sim_query_dmp_dnn+","+sim_query_psp_dmp);
        return sim_query_dmp_dnn/sim_query_psp_dmp;
     }
 
     private double calc_sim_query(double[] first, double[] second, double[] query_termvector) {
         // maybe do some assertions here
+        System.out.println("lenght of vectors(calc_sim_query):"+first.length+","+second.length+","+query_termvector.length);
         assert query_termvector.length == first.length;
         assert first.length == second.length;
         double sim_query_upper_part1 = 0;
@@ -262,12 +275,15 @@ public class PostQueryCalc {
             sim_query_upper_part1 += first_freq*second_freq;
             sim_query_lower_part1_sum1 += Math.pow(first_freq,2);
             sim_query_lower_part1_sum2 += Math.pow(second_freq,2);
+            System.out.println("query-termvector:"+query_termvector[i]);
             sim_query_upper_part2 += ((first_freq+second_freq)/2)*query_termvector[i];
             sim_query_lower_part2_sum1 += Math.pow(((first_freq+second_freq)/2),2);
             sim_query_lower_part2_sum2 += Math.pow(query_termvector[i],2);
         }
         double sim_query_part1 = sim_query_upper_part1/(sim_query_lower_part1_sum1*sim_query_lower_part1_sum2);
         double sim_query_part2 = sim_query_upper_part2/(sim_query_lower_part2_sum1*sim_query_lower_part2_sum2);
+        System.out.println("calc_sim_query"+sim_query_part1+","+sim_query_part2);
+        System.out.println("result in sim_query_calc:"+sim_query_part1*sim_query_part2);
         return sim_query_part1*sim_query_part2;
     }
 
@@ -283,9 +299,12 @@ public class PostQueryCalc {
         for (int i = 0; i < hits.scoreDocs.length; i++) {
             List<Double> cos_similarities = new ArrayList<>();
             // Calculate cosine sim for each
+            double[] termvector_i = document_to_termvectors.get(hits.scoreDocs[i].doc);
             for (int j = 0; j < hits.scoreDocs.length; j++) {
                 if (j == i) continue;
-                double cos_score = Util.cos_sim(Arrays.stream(document_to_termvectors.get(i)).mapToDouble(Double::doubleValue).toArray(), Arrays.stream(document_to_termvectors.get(j)).mapToDouble(Double::doubleValue).toArray());
+
+                double[] termvector_j =document_to_termvectors.get(hits.scoreDocs[j].doc);
+                double cos_score = Util.cos_sim(termvector_i,termvector_j);
                 cos_similarities.add(cos_score);
             }
             cos_similarities.sort(Comparator.naturalOrder());

@@ -9,6 +9,9 @@ import org.apache.lucene.index.*;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.similarities.Similarity;
+import org.apache.lucene.search.similarities.TFIDFSimilarity;
 
 import java.io.IOException;
 import java.util.*;
@@ -122,11 +125,14 @@ public class Util {
         while (all_terms_it.next() != null){
             length++;
         }
+        all_terms_it = all_terms.iterator();
         //System.out.println("lenght"+length);
+        ClassicSimilarity sim = new ClassicSimilarity();
         double[] idf_termvector = new double[length];
         int i = 0;
         while (all_terms_it.next() != null) {
-            idf_termvector[i] = (1+Math.log(((double) all_terms_it.docFreq()+1)/(all_terms_it.totalTermFreq()+1)));
+            //System.out.println("idf:"+sim.idf(all_terms_it.docFreq(), reader.numDocs()));
+            idf_termvector[i] = sim.idf(all_terms_it.docFreq(), reader.numDocs());
             i++;
         }
         return idf_termvector;
@@ -142,11 +148,24 @@ public class Util {
         while (tokenStream.incrementToken()) {
            token_counts.merge(attr.toString(),1,Integer::sum);
         }
+        for(Map.Entry<String,Integer> entry : token_counts.entrySet()){
+            System.out.println(entry.getKey()+":"+entry.getValue());
+        }
         Map<Integer,String> termvector_ids = get_termvector_terms(reader);
         double[] termvector = get_idf_termvectors(reader);
+        System.out.println("termvector idf:"+Arrays.toString(termvector));
+        if(termvector_ids.containsValue("yourself")) System.out.println("success");
+        System.out.println(token_counts.get("yourself"));
+        int marker = 0;
         for(int i = 0;i < termvector.length;i++){
+            if(termvector_ids.get(i).equals("yourself")){
+                System.out.println("query term value:"+token_counts.getOrDefault(termvector_ids.get(i),0));
+                System.out.println("idf:"+termvector[i]);
+                marker = i;
+            }
             termvector[i] = token_counts.getOrDefault(termvector_ids.get(i),0)*termvector[i];
         }
+        System.out.println("video"+termvector[marker]);
         return  termvector;
     };
 
