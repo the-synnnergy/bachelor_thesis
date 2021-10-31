@@ -25,8 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static FeaturesCalc.Util.get_idf_document_vectors;
-import static FeaturesCalc.Util.get_query_idf_termvector;
+import static FeaturesCalc.Util.*;
 
 //import org.apache.lucene.core.*;
 
@@ -259,9 +258,10 @@ public class test {
         System.out.println("query vector now");
         System.out.println(Arrays.toString(get_query_idf_termvector("yourself",reader)));
         System.out.println();
-       /* PostQueryCalc pq = new PostQueryCalc(reader);
+        PostQueryCalc pq = new PostQueryCalc(reader);
         PostQueryCalc.PostQueryFeatures pqc = pq.get_PostQueryFeatures("video recorder");
-        pqc.print();*/
+        pqc.print();
+        //Map<Integer,Map<String,Double>> lol = get_document_probs(reader);
 
         writer.close();
         directory.close();

@@ -201,6 +201,7 @@ public class Util {
         }
         for(int i = 0; i< num_docs;i++){
             double[] term_vector = calc_prob_vector(document_vectors.get(i));
+            //System.out.println(Arrays.toString(term_vector));
             Map<String,Double> probs = new HashMap<>();
             for(int j = 0;j<term_vector.length;j++){
                 probs.put(terms_map.get(j),term_vector[j]);
@@ -211,11 +212,24 @@ public class Util {
     }
 
     private static double[] calc_prob_vector(double[] termvector) {
-        double freq_sum = DoubleStream.of(termvector).sum();
+        double freq_sum = Arrays.stream(termvector).parallel().sum();
         for(int i = 0; i < termvector.length;i++){
             termvector[i] = termvector[i]/freq_sum;
         }
         return termvector;
+    }
+
+    public static Map<String,Double> get_corpus_probs(IndexReader reader) throws IOException {
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        Map<String,Double> corpus_probs = new HashMap<>();
+        Map<Integer,String> terms_map = get_termvector_terms(reader);
+        long total_corpus_term_count = reader.getSumTotalTermFreq("body");
+        while(all_terms_it.next() != null){
+            corpus_probs.put(all_terms_it.term().utf8ToString(),((double)all_terms_it.totalTermFreq())/total_corpus_term_count);
+        }
+
+        return corpus_probs;
     }
 
     ;
