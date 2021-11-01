@@ -231,7 +231,7 @@ public class PostQueryCalc {
                 break;
             }
         }
-        int nearest_neighbor = 0;
+        int nearest_neighbor;
         switch (marked_point_index) {
             case 0:
                 nearest_neighbor = 1;

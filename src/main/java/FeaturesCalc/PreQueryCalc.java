@@ -68,10 +68,9 @@ public class PreQueryCalc {
     private IndexReader reader;
     // tf-idf term vectors
     private final Map<String,Double[]> document_term_vectors = new HashMap<>();
-    public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException {
-        this.corpus = corpus;
-        reader = generate_index(corpus);
-        //extract IDF, tf for evey Document, TF over whole corpus, Document length as tokenized and the collection size from Lucene index.
+
+    public PreQueryCalc(IndexReader reader) throws IOException {
+        this.reader = reader;
         collection_size = reader.getDocCount("body");
         total_tokens = reader.getSumTotalTermFreq("body");
         Terms all_terms = MultiTerms.getTerms(reader,"body");
@@ -123,13 +122,68 @@ public class PreQueryCalc {
         }
 
     }
+    public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException {
+        this(generate_index(corpus));
+        /*reader = generate_index(corpus);
+        //extract IDF, tf for evey Document, TF over whole corpus, Document length as tokenized and the collection size from Lucene index.
+        collection_size = reader.getDocCount("body");
+        total_tokens = reader.getSumTotalTermFreq("body");
+        Terms all_terms = MultiTerms.getTerms(reader,"body");
+        TermsEnum all_terms_it = all_terms.iterator();
+        while (all_terms_it.next() != null){
+            BytesRef term = all_terms_it.term();
+            corpus_termfrequency.put(term.utf8ToString(), all_terms_it.totalTermFreq());
+            Map<String,Integer> tf_map = new HashMap<>();
+            idf_map.put(term.utf8ToString(),new ClassicSimilarity().idf(all_terms_it.docFreq(),collection_size));
+            PostingsEnum postings = all_terms_it.postings(null);
+            int doc_id = 0;
+            while ((doc_id =postings.nextDoc()) != NO_MORE_DOCS){
+                // Add frequencies to Map key for document length! #TODO fix this to readable!
+                doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(),0)+ postings.freq());
+                tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
+            }
+            // Put map with Frequency for Terms in all Documents in Termmap, so we can find the Termmap via Term and then find frequency via Document title!
+            map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
+        }
+
+        for(Map.Entry<String,Integer> entry : doc_length_map.entrySet()){
+            total_tokens += entry.getValue();
+        }
+        for(Map.Entry<String,Long> entry: corpus_termfrequency.entrySet()){
+            scs_prob_corpus.put(entry.getKey(), ((double) entry.getValue())/total_tokens);
+        }
+        // Generate vector space representation
+        int num_terms = corpus_termfrequency.size();
+        HashMap<String,Integer> term_to_vectorindex = new HashMap<>();
+        int i = 0;
+        for(Map.Entry<String,Long> entry:corpus_termfrequency.entrySet()){
+            term_to_vectorindex.put(entry.getKey(),i);
+            i++;
+        }
+        // fill document vectors with 0s and make Map
+        for(int j = 0; j< reader.maxDoc();j++){
+            Double[] term_vector = new Double[corpus_termfrequency.size()];
+            Arrays.fill(term_vector,0.0);
+            document_term_vectors.put(reader.document(j).get("title"),term_vector);
+        }
+        // get terms and change freq in corresponding vector index for all occurences.
+        for(Map.Entry<String,Long> entry:corpus_termfrequency.entrySet()){
+            int index = term_to_vectorindex.get(entry.getKey());
+            Map<String,Integer> tf_map = map_to_termfrequency_map.get(entry.getKey());
+            for(Map.Entry<String,Integer> tf_entry : tf_map.entrySet()){
+                // change this by using idf maybe?
+                document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue())* idf_map.get(tf_entry.getKey());
+            }
+        }
+*/
+    }
 
     /**
      * Generates index for the calculations
      * @param corpus
      * @return
      */
-    private IndexReader generate_index(List<ImmutablePair<String, String>> corpus) throws IOException {
+    private static IndexReader generate_index(List<ImmutablePair<String, String>> corpus) throws IOException {
         Analyzer analyzer = new EnglishAnalyzer();
         IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
