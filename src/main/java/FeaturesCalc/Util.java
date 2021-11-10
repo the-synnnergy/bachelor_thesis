@@ -10,12 +10,9 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
-import org.apache.lucene.search.similarities.Similarity;
-import org.apache.lucene.search.similarities.TFIDFSimilarity;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.DoubleStream;
 
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
@@ -79,7 +76,6 @@ public class Util
      * @param reader
      * @return
      */
-    // #TODO do IDF at end!!!!
     public static Map<Integer, double[]> get_idf_document_vectors(IndexReader reader) throws IOException
     {
         Terms all_terms = MultiTerms.getTerms(reader, "body");

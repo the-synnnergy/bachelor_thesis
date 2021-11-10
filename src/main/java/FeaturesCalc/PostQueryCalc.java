@@ -1,12 +1,11 @@
-
 package FeaturesCalc;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.QueryBuilder;
 
@@ -56,7 +55,6 @@ public class PostQueryCalc
     {
         this.reader = reader;
         document_to_termvectors = Util.get_idf_document_vectors(reader);
-        // #TODO fill termvectors....
     }
 
     public PostQueryFeatures get_PostQueryFeatures(String query) throws IOException
@@ -65,25 +63,25 @@ public class PostQueryCalc
         IndexSearcher searcher = new IndexSearcher(reader);
         long time = System.currentTimeMillis();
         features.clustering_tendency = get_clustering_tendency(query, searcher);
-        System.out.println("Clustering Tendency:"+(System.currentTimeMillis()-time));
+        System.out.println("Clustering Tendency:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.first_rank_change = get_first_rank_change(query, searcher);
-        System.out.println("First Rank change:"+(System.currentTimeMillis()-time));
+        System.out.println("First Rank change:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
-        System.out.println("Normalized query commitment:"+(System.currentTimeMillis()-time));
+        System.out.println("Normalized query commitment:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.robustness_score = get_robustness_score(query, searcher);
-        System.out.println("Get robustness score:"+(System.currentTimeMillis()-time));
+        System.out.println("Get robustness score:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
-        System.out.println("Spatial autocorrelation:"+(System.currentTimeMillis()-time));
+        System.out.println("Spatial autocorrelation:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.subquery_overlap = get_subquery_overlap(query, searcher);
-        System.out.println("subquery overlap:"+(System.currentTimeMillis()-time));
+        System.out.println("subquery overlap:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.weighted_information_gain = get_weighted_information_gain(query, searcher);
-        System.out.println("wig:"+(System.currentTimeMillis()-time));
+        System.out.println("wig:" + (System.currentTimeMillis() - time));
         return features;
     }
 
@@ -119,7 +117,6 @@ public class PostQueryCalc
         return new StandardDeviation().evaluate(overlapping_results.stream().mapToDouble(Double::doubleValue).toArray());
     }
 
-    // #TODO do real pertubed query
     private double get_robustness_score(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
@@ -154,7 +151,7 @@ public class PostQueryCalc
         return spearman_rank_correlations.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
     }
 
-    // TODO get real pertubed query results.
+
     private double get_first_rank_change(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
@@ -209,26 +206,6 @@ public class PostQueryCalc
             mean += get_sim_query_for_mean(sampleable_points, searcher, doc_ids, top100, term_vectors, query);
         }
         mean = mean / 100;
-
-
-        // TODO get maximum weight for terms across documents...
-        /* List<Term> terms = extract_terms_boolean_query(((BooleanQuery) bool_query));
-        class Result {
-            TopDocs topDocs;
-            Term term;
-        }
-        List<Result> results = new ArrayList<>();
-        for (Term term : terms) {
-            Result result = new Result();
-            result.topDocs = searcher.search(new TermQuery(term), Integer.MAX_VALUE);
-            result.term = term;
-            results.add(result);
-        }
-        Map<String, Double> diff_between_max_min_weight = new HashMap<>();
-        for (Result r : results) {
-            double max = Arrays.stream(r.topDocs.scoreDocs).max((scoreDoc) -> scoreDoc.score);
-        }*/
-        //Map<Integer,int[]> document_vectors =get_document_vectors(reader);
         int termvector_length = term_vectors.get(0).length;
         double[] max = new double[termvector_length];
         double[] min = new double[termvector_length];
@@ -361,8 +338,7 @@ public class PostQueryCalc
                 cos_similarities.add(cos_score);
             }
             cos_similarities.sort(Comparator.naturalOrder());
-            int size = 5;
-            if (cos_similarities.size() < 5) size = cos_similarities.size();
+            int size = Math.min(cos_similarities.size(), 5);
             for (int k = 0; k < size; k++)
             {
                 new_scores[i] += cos_similarities.get(k);
@@ -381,7 +357,6 @@ public class PostQueryCalc
 
     private double get_weighted_information_gain(String query, IndexSearcher searcher) throws IOException
     {
-        // #TODO implement extracting of probalities per document etc.
         QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
         Query q = qb.createBooleanQuery("body", query);
         TopDocs top_hits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);

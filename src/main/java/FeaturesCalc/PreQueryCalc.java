@@ -16,7 +16,6 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.MathUtil;
 
 import java.io.IOException;
 import java.nio.file.Files;

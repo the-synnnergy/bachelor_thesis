@@ -1,13 +1,21 @@
 package FeaturesCalc;
 
 import org.apache.lucene.index.IndexReader;
+import weka.core.Instance;
+
+import java.util.List;
 
 public class FeaturesCalc
 {
-    FeaturesCalc(IndexReader[] readers, String query){
-        /**
-         * This class should calculate the results for each Similiarty, also the results for PreQueryFeatures and Postquery Features
-         *
-         */
+    public static List<String> get_features()
+    {
+        return null;
     }
+
+    public static Instance get_inst_to_classify(IndexReader[] readers, String query)
+    {
+        return null;
+    }
+
+
 }

@@ -16,13 +16,13 @@
  */
 package org.apache.lucene.search;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.lucene.index.ImpactsEnum;
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.SlowImpactsEnum;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Expert: A <code>Scorer</code> for documents matching a <code>Term</code>.

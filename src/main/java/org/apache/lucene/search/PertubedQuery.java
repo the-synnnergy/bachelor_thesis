@@ -16,21 +16,13 @@
  */
 package org.apache.lucene.search;
 
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.similarities.Similarity;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import org.apache.lucene.index.IndexReaderContext;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.PostingsEnum;
-import org.apache.lucene.index.ReaderUtil;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermState;
-import org.apache.lucene.index.TermStates;
-import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.search.similarities.Similarity;
 
 /**
  * A Query that matches documents containing a term. This may be combined with other terms with a

@@ -25,7 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static FeaturesCalc.Util.*;
+import static FeaturesCalc.Util.get_idf_document_vectors;
+import static FeaturesCalc.Util.get_query_idf_termvector;
 
 //import org.apache.lucene.core.*;
 
