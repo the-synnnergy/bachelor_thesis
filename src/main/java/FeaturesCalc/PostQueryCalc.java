@@ -63,13 +63,27 @@ public class PostQueryCalc
     {
         PostQueryFeatures features = new PostQueryFeatures();
         IndexSearcher searcher = new IndexSearcher(reader);
+        long time = System.currentTimeMillis();
         features.clustering_tendency = get_clustering_tendency(query, searcher);
+        System.out.println("Clustering Tendency:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.first_rank_change = get_first_rank_change(query, searcher);
+        System.out.println("First Rank change:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
+        System.out.println("Normalized query commitment:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.robustness_score = get_robustness_score(query, searcher);
+        System.out.println("Get robustness score:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
+        System.out.println("Spatial autocorrelation:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.subquery_overlap = get_subquery_overlap(query, searcher);
+        System.out.println("subquery overlap:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.weighted_information_gain = get_weighted_information_gain(query, searcher);
+        System.out.println("wig:"+(System.currentTimeMillis()-time));
         return features;
     }
 
@@ -294,7 +308,7 @@ public class PostQueryCalc
     private double calc_sim_query(double[] first, double[] second, double[] query_termvector)
     {
         // maybe do some assertions here
-        System.out.println("lenght of vectors(calc_sim_query):" + first.length + "," + second.length + "," + query_termvector.length);
+        //System.out.println("lenght of vectors(calc_sim_query):" + first.length + "," + second.length + "," + query_termvector.length);
         assert query_termvector.length == first.length;
         assert first.length == second.length;
         double sim_query_upper_part1 = 0;
@@ -310,15 +324,15 @@ public class PostQueryCalc
             sim_query_upper_part1 += first_freq * second_freq;
             sim_query_lower_part1_sum1 += Math.pow(first_freq, 2);
             sim_query_lower_part1_sum2 += Math.pow(second_freq, 2);
-            System.out.println("query-termvector:" + query_termvector[i]);
+            //System.out.println("query-termvector:" + query_termvector[i]);
             sim_query_upper_part2 += ((first_freq + second_freq) / 2) * query_termvector[i];
             sim_query_lower_part2_sum1 += Math.pow(((first_freq + second_freq) / 2), 2);
             sim_query_lower_part2_sum2 += Math.pow(query_termvector[i], 2);
         }
         double sim_query_part1 = sim_query_upper_part1 / (sim_query_lower_part1_sum1 * sim_query_lower_part1_sum2);
         double sim_query_part2 = sim_query_upper_part2 / (sim_query_lower_part2_sum1 * sim_query_lower_part2_sum2);
-        System.out.println("calc_sim_query" + sim_query_part1 + "," + sim_query_part2);
-        System.out.println("result in sim_query_calc:" + sim_query_part1 * sim_query_part2);
+        //System.out.println("calc_sim_query" + sim_query_part1 + "," + sim_query_part2);
+        //System.out.println("result in sim_query_calc:" + sim_query_part1 * sim_query_part2);
         return sim_query_part1 * sim_query_part2;
     }
 

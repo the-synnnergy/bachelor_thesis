@@ -113,7 +113,7 @@ public class Util
                 term_vector[pos] = postings.freq() * idf;
                 document_vectors.put(doc_id, term_vector);
             }
-            System.out.println(pos + ":" + all_terms_it.term().utf8ToString());
+            //System.out.println(pos + ":" + all_terms_it.term().utf8ToString());
             pos++;
         }
         return document_vectors;
@@ -172,25 +172,25 @@ public class Util
         }
         for (Map.Entry<String, Integer> entry : token_counts.entrySet())
         {
-            System.out.println(entry.getKey() + ":" + entry.getValue());
+            //System.out.println(entry.getKey() + ":" + entry.getValue());
         }
         Map<Integer, String> termvector_ids = get_termvector_terms(reader);
         double[] termvector = get_idf_termvectors(reader);
-        System.out.println("termvector idf:" + Arrays.toString(termvector));
+        /*System.out.println("termvector idf:" + Arrays.toString(termvector));
         if (termvector_ids.containsValue("yourself")) System.out.println("success");
-        System.out.println(token_counts.get("yourself"));
+        System.out.println(token_counts.get("yourself"));*/
         int marker = 0;
         for (int i = 0; i < termvector.length; i++)
         {
             if (termvector_ids.get(i).equals("yourself"))
             {
-                System.out.println("query term value:" + token_counts.getOrDefault(termvector_ids.get(i), 0));
-                System.out.println("idf:" + termvector[i]);
+                /*System.out.println("query term value:" + token_counts.getOrDefault(termvector_ids.get(i), 0));
+                System.out.println("idf:" + termvector[i]);*/
                 marker = i;
             }
             termvector[i] = token_counts.getOrDefault(termvector_ids.get(i), 0) * termvector[i];
         }
-        System.out.println("video" + termvector[marker]);
+        //System.out.println("video" + termvector[marker]);
         return termvector;
     }
 
