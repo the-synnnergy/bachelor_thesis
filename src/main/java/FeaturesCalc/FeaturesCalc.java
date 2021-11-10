@@ -1,4 +1,5 @@
 package FeaturesCalc;
 
-public class FeaturesCalc git {
+public class FeaturesCalc git
+{
 }

@@ -23,13 +23,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-enum Similarities{
+enum Similarities
+{
     BM25,
     TF_IDF,
     JMSim,
     Dirichlet
-};
-public class SimilarityCalc {
+}
+
+public class SimilarityCalc
+{
     /*
     Variables for the reader, writer index stuff and Similarity.
      */
@@ -39,15 +42,18 @@ public class SimilarityCalc {
     private IndexSearcher search = null;
     private IndexReader reader = null;
 
-    public Similarity getSim() {
+    public Similarity getSim()
+    {
         return sim;
     }
 
-    public SimilarityCalc(List<ImmutablePair<String,String>> docs, Similarities similarity ) throws IOException {
+    public SimilarityCalc(List<ImmutablePair<String, String>> docs, Similarities similarity) throws IOException
+    {
         analyzer = new EnglishAnalyzer();
         IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-        switch (similarity) {
+        switch (similarity)
+        {
             case BM25:
                 sim = new BM25Similarity();
                 break;
@@ -63,18 +69,22 @@ public class SimilarityCalc {
         }
         writerConfig.setSimilarity(sim);
         Path indexPath = null;
-        try {
-            indexPath = Files.createTempDirectory("temp" );
-        } catch (IOException e) {
+        try
+        {
+            indexPath = Files.createTempDirectory("temp");
+        } catch (IOException e)
+        {
             e.printStackTrace();
 
         }
         assert indexPath != null;
         // not sure if good.... maybe new fsdirectory better, dont know if its working
         FSDirectory dir = FSDirectory.open(indexPath);
-        try {
-            index_writer = new IndexWriter(dir,writerConfig);
-        } catch (IOException e) {
+        try
+        {
+            index_writer = new IndexWriter(dir, writerConfig);
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
         FieldType field = new FieldType();
@@ -82,14 +92,15 @@ public class SimilarityCalc {
         field.setStored(true);
         field.setStoreTermVectors(true);
         field.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-        for (ImmutablePair<String,String> document: docs) {
-           String title = document.getLeft();
-           String body = document.getRight();
-           Document doc = new Document();
+        for (ImmutablePair<String, String> document : docs)
+        {
+            String title = document.getLeft();
+            String body = document.getRight();
+            Document doc = new Document();
 
-           doc.add(new Field("body", title+body, field));
-           doc.add(new Field("title", title, StringField.TYPE_STORED));
-           index_writer.addDocument(doc);
+            doc.add(new Field("body", title + body, field));
+            doc.add(new Field("title", title, StringField.TYPE_STORED));
+            index_writer.addDocument(doc);
         }
         index_writer.commit();
         reader = DirectoryReader.open(index_writer);
@@ -97,14 +108,16 @@ public class SimilarityCalc {
         search.setSimilarity(this.sim);
     }
 
-    public Map<String,Float> getCalculatedSimilarities(String query) throws IOException {
+    public Map<String, Float> getCalculatedSimilarities(String query) throws IOException
+    {
         QueryBuilder qb = new QueryBuilder(analyzer);
-        Query q = qb.createBooleanQuery("body",query);
+        Query q = qb.createBooleanQuery("body", query);
         TopDocs top = search.search(q, Integer.MAX_VALUE);
         ScoreDoc[] scoreDocs = top.scoreDocs;
-        Map<String,Float> results = new HashMap<>();
+        Map<String, Float> results = new HashMap<>();
         System.out.println(scoreDocs.length);
-        for(ScoreDoc hit: scoreDocs){
+        for (ScoreDoc hit : scoreDocs)
+        {
             int docId = hit.doc;
             float score = hit.score;
             String title = search.doc(docId).get("title");

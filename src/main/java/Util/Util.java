@@ -1,6 +1,7 @@
 package Util;
-public class Util {
 
+public class Util
+{
 
 
     public final static int FEATURE_COUNT = 32;
@@ -29,8 +30,8 @@ public class Util {
     public final static int SUM_SCQ = 18;
     public final static int AVG_PMI = 19;
     public final static int MAX_PMI = 20;
-    /** now the seven post retriveal query features
-     *
+    /**
+     * now the seven post retriveal query features
      */
     public final static int SUBQUERY_OL = 21;
     public final static int ROBUSTNESS_SCORE = 22;

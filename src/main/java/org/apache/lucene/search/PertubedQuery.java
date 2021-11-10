@@ -36,13 +36,16 @@ import org.apache.lucene.search.similarities.Similarity;
  * A Query that matches documents containing a term. This may be combined with other terms with a
  * {@link BooleanQuery}.
  */
-public class PertubedQuery extends Query {
+public class PertubedQuery extends Query
+{
 
     private final Term term;
     private final TermStates perReaderTermState;
     private List<Integer> documents_to_pertubate;
+
     private
-    final class CustomTermWeight extends Weight {
+    final class CustomTermWeight extends Weight
+    {
         private final Similarity similarity;
         private final Similarity.SimScorer simScorer;
         private final TermStates termStates;
@@ -50,9 +53,11 @@ public class PertubedQuery extends Query {
 
         public CustomTermWeight(
                 IndexSearcher searcher, ScoreMode scoreMode, float boost, TermStates termStates)
-                throws IOException {
+                throws IOException
+        {
             super(PertubedQuery.this);
-            if (scoreMode.needsScores() && termStates == null) {
+            if (scoreMode.needsScores() && termStates == null)
+            {
                 throw new IllegalStateException("termStates are required when scores are needed");
             }
             this.scoreMode = scoreMode;
@@ -61,42 +66,50 @@ public class PertubedQuery extends Query {
 
             final CollectionStatistics collectionStats;
             final TermStatistics termStats;
-            if (scoreMode.needsScores()) {
+            if (scoreMode.needsScores())
+            {
                 collectionStats = searcher.collectionStatistics(term.field());
                 termStats =
                         termStates.docFreq() > 0
                                 ? searcher.termStatistics(term, termStates.docFreq(), termStates.totalTermFreq())
                                 : null;
-            } else {
+            } else
+            {
                 // we do not need the actual stats, use fake stats with docFreq=maxDoc=ttf=1
                 // we do not need the actual stats, use fake stats with docFreq=maxDoc=ttf=1
                 collectionStats = new CollectionStatistics(term.field(), 1, 1, 1, 1);
                 termStats = new TermStatistics(term.bytes(), 1, 1);
             }
 
-            if (termStats == null) {
+            if (termStats == null)
+            {
                 this.simScorer = null; // term doesn't exist in any segment, we won't use similarity at all
-            } else {
+            } else
+            {
                 this.simScorer = similarity.scorer(boost, collectionStats, termStats);
             }
         }
 
         @Override
-        public void extractTerms(Set<Term> set) {
+        public void extractTerms(Set<Term> set)
+        {
 
         }
 
         @Override
-        public Matches matches(LeafReaderContext context, int doc) throws IOException {
+        public Matches matches(LeafReaderContext context, int doc) throws IOException
+        {
             TermsEnum te = getTermsEnum(context);
-            if (te == null) {
+            if (te == null)
+            {
                 return null;
             }
             return MatchesUtils.forField(
                     term.field(),
                     () -> {
                         PostingsEnum pe = te.postings(null, PostingsEnum.OFFSETS);
-                        if (pe.advance(doc) != doc) {
+                        if (pe.advance(doc) != doc)
+                        {
                             return null;
                         }
                         return new TermMatchesIterator(getQuery(), pe);
@@ -104,25 +117,29 @@ public class PertubedQuery extends Query {
         }
 
         @Override
-        public String toString() {
+        public String toString()
+        {
             return "weight(" + PertubedQuery.this + ")";
         }
 
         @Override
-        public Scorer scorer(LeafReaderContext context) throws IOException {
+        public Scorer scorer(LeafReaderContext context) throws IOException
+        {
             assert termStates == null || termStates.wasBuiltFor(ReaderUtil.getTopLevelContext(context))
                     : "The top-reader used to create Weight is not the same as the current reader's top-reader ("
                     + ReaderUtil.getTopLevelContext(context);
-            ;
             final TermsEnum termsEnum = getTermsEnum(context);
-            if (termsEnum == null) {
+            if (termsEnum == null)
+            {
                 return null;
             }
             LeafSimScorer scorer =
                     new LeafSimScorer(simScorer, context.reader(), term.field(), scoreMode.needsScores());
-            if (scoreMode == ScoreMode.TOP_SCORES) {
+            if (scoreMode == ScoreMode.TOP_SCORES)
+            {
                 return new PertubedScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer, documents_to_pertubate);
-            } else {
+            } else
+            {
                 return new PertubedScorer(
                         this,
                         termsEnum.postings(
@@ -132,7 +149,8 @@ public class PertubedQuery extends Query {
         }
 
         @Override
-        public boolean isCacheable(LeafReaderContext ctx) {
+        public boolean isCacheable(LeafReaderContext ctx)
+        {
             return true;
         }
 
@@ -140,13 +158,15 @@ public class PertubedQuery extends Query {
          * Returns a {@link TermsEnum} positioned at this weights Term or null if the term does not
          * exist in the given context
          */
-        private TermsEnum getTermsEnum(LeafReaderContext context) throws IOException {
+        private TermsEnum getTermsEnum(LeafReaderContext context) throws IOException
+        {
             assert termStates != null;
             assert termStates.wasBuiltFor(ReaderUtil.getTopLevelContext(context))
                     : "The top-reader used to create Weight is not the same as the current reader's top-reader ("
                     + ReaderUtil.getTopLevelContext(context);
             final TermState state = termStates.get(context);
-            if (state == null) { // term is not present in that reader
+            if (state == null)
+            { // term is not present in that reader
                 assert termNotInReader(context.reader(), term)
                         : "no termstate found but term exists in reader term=" + term;
                 return null;
@@ -156,7 +176,8 @@ public class PertubedQuery extends Query {
             return termsEnum;
         }
 
-        private boolean termNotInReader(LeafReader reader, Term term) throws IOException {
+        private boolean termNotInReader(LeafReader reader, Term term) throws IOException
+        {
             // only called from assert
             // System.out.println("TQ.termNotInReader reader=" + reader + " term=" +
             // field + ":" + bytes.utf8ToString());
@@ -164,11 +185,14 @@ public class PertubedQuery extends Query {
         }
 
         @Override
-        public Explanation explain(LeafReaderContext context, int doc) throws IOException {
+        public Explanation explain(LeafReaderContext context, int doc) throws IOException
+        {
             PertubedScorer scorer = (PertubedScorer) scorer(context);
-            if (scorer != null) {
+            if (scorer != null)
+            {
                 int newDoc = scorer.iterator().advance(doc);
-                if (newDoc == doc) {
+                if (newDoc == doc)
+                {
                     float freq = scorer.freq();
                     LeafSimScorer docScorer =
                             new LeafSimScorer(simScorer, context.reader(), term.field(), true);
@@ -191,8 +215,11 @@ public class PertubedQuery extends Query {
         }
     }
 
-    /** Constructs a query for the term <code>t</code>. */
-    public PertubedQuery(Term t, List<Integer> documents_to_perturbed) {
+    /**
+     * Constructs a query for the term <code>t</code>.
+     */
+    public PertubedQuery(Term t, List<Integer> documents_to_perturbed)
+    {
         term = Objects.requireNonNull(t);
         this.documents_to_pertubate = Objects.requireNonNull(documents_to_perturbed);
 
@@ -203,25 +230,32 @@ public class PertubedQuery extends Query {
      * Expert: constructs a TermQuery that will use the provided docFreq instead of looking up the
      * docFreq against the searcher.
      */
-    public PertubedQuery(Term t, TermStates states) {
+    public PertubedQuery(Term t, TermStates states)
+    {
         assert states != null;
         term = Objects.requireNonNull(t);
         perReaderTermState = Objects.requireNonNull(states);
     }
 
-    /** Returns the term of this query. */
-    public Term getTerm() {
+    /**
+     * Returns the term of this query.
+     */
+    public Term getTerm()
+    {
         return term;
     }
 
     @Override
     public Weight createWeight(IndexSearcher searcher, ScoreMode scoreMode, float boost)
-            throws IOException {
+            throws IOException
+    {
         final IndexReaderContext context = searcher.getTopReaderContext();
         final TermStates termState;
-        if (perReaderTermState == null || perReaderTermState.wasBuiltFor(context) == false) {
+        if (perReaderTermState == null || perReaderTermState.wasBuiltFor(context) == false)
+        {
             termState = TermStates.build(context, term, scoreMode.needsScores());
-        } else {
+        } else
+        {
             // PRTS was pre-build for this IS
             termState = this.perReaderTermState;
         }
@@ -230,17 +264,23 @@ public class PertubedQuery extends Query {
     }
 
     @Override
-    public void visit(QueryVisitor visitor) {
-        if (visitor.acceptField(term.field())) {
+    public void visit(QueryVisitor visitor)
+    {
+        if (visitor.acceptField(term.field()))
+        {
             visitor.consumeTerms(this, term);
         }
     }
 
-    /** Prints a user-readable version of this query. */
+    /**
+     * Prints a user-readable version of this query.
+     */
     @Override
-    public String toString(String field) {
+    public String toString(String field)
+    {
         StringBuilder buffer = new StringBuilder();
-        if (!term.field().equals(field)) {
+        if (!term.field().equals(field))
+        {
             buffer.append(term.field());
             buffer.append(":");
         }
@@ -253,18 +293,23 @@ public class PertubedQuery extends Query {
      *
      * @lucene.experimental
      */
-    public TermStates getTermStates() {
+    public TermStates getTermStates()
+    {
         return perReaderTermState;
     }
 
-    /** Returns true iff <code>other</code> is equal to <code>this</code>. */
+    /**
+     * Returns true iff <code>other</code> is equal to <code>this</code>.
+     */
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(Object other)
+    {
         return sameClassAs(other) && term.equals(((PertubedQuery) other).term);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return classHash() ^ term.hashCode();
     }
 }

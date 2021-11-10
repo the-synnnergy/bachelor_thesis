@@ -29,15 +29,20 @@ import org.apache.lucene.index.SlowImpactsEnum;
  *
  * @lucene.internal
  */
-public final class PertubedScorer extends Scorer {
+public final class PertubedScorer extends Scorer
+{
     private final PostingsEnum postingsEnum;
     private final ImpactsEnum impactsEnum;
     private final DocIdSetIterator iterator;
     private final LeafSimScorer docScorer;
     private final ImpactsDISI impactsDisi;
     private final List<Integer> documents_to_pertubate;
-    /** Construct a {@link TermScorer} that will iterate all documents. */
-    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed) {
+
+    /**
+     * Construct a {@link TermScorer} that will iterate all documents.
+     */
+    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed)
+    {
         super(weight);
         iterator = this.postingsEnum = postingsEnum;
         impactsEnum = new SlowImpactsEnum(postingsEnum);
@@ -50,7 +55,8 @@ public final class PertubedScorer extends Scorer {
      * Construct a {@link TermScorer} that will use impacts to skip blocks of non-competitive
      * documents.
      */
-    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed) {
+    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed)
+    {
         super(weight);
         postingsEnum = this.impactsEnum = impactsEnum;
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
@@ -60,53 +66,67 @@ public final class PertubedScorer extends Scorer {
     }
 
     @Override
-    public int docID() {
+    public int docID()
+    {
         return postingsEnum.docID();
     }
 
-    /** Returns term frequency in the current document. */
-    public final int freq() throws IOException {
+    /**
+     * Returns term frequency in the current document.
+     */
+    public final int freq() throws IOException
+    {
         return postingsEnum.freq();
     }
 
     @Override
-    public DocIdSetIterator iterator() {
+    public DocIdSetIterator iterator()
+    {
         return iterator;
     }
 
     @Override
-    public float score() throws IOException {
+    public float score() throws IOException
+    {
         assert docID() != DocIdSetIterator.NO_MORE_DOCS;
         // TODO change this to a random Poisson
-        if(documents_to_pertubate.contains(docID())){
-            return docScorer.score(postingsEnum.docID(),new PoissonDistribution(postingsEnum.freq()).sample());
+        if (documents_to_pertubate.contains(docID()))
+        {
+            return docScorer.score(postingsEnum.docID(), new PoissonDistribution(postingsEnum.freq()).sample());
         }
         return docScorer.score(postingsEnum.docID(), postingsEnum.freq());
     }
 
     //@Override
-    public float smoothingScore(int docId) throws IOException {
+    public float smoothingScore(int docId) throws IOException
+    {
         return docScorer.score(docId, 0);
     }
 
     @Override
-    public int advanceShallow(int target) throws IOException {
+    public int advanceShallow(int target) throws IOException
+    {
         return impactsDisi.advanceShallow(target);
     }
 
     @Override
-    public float getMaxScore(int upTo) throws IOException {
+    public float getMaxScore(int upTo) throws IOException
+    {
         return impactsDisi.getMaxScore(upTo);
     }
 
     @Override
-    public void setMinCompetitiveScore(float minScore) {
+    public void setMinCompetitiveScore(float minScore)
+    {
         impactsDisi.setMinCompetitiveScore(minScore);
     }
 
-    /** Returns a string representation of this <code>TermScorer</code>. */
+    /**
+     * Returns a string representation of this <code>TermScorer</code>.
+     */
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "scorer(" + weight + ")[" + super.toString() + "]";
     }
 }
