@@ -6,9 +6,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.*;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 
 import java.io.IOException;
@@ -262,6 +260,17 @@ public class Util
         }
 
         return corpus_probs;
+    }
+
+    public static double get_sim(IndexReader reader, int doc_id, Query query) throws IOException
+    {
+        IndexSearcher searcher = new IndexSearcher(reader);
+        TopDocs results = searcher.search(query,Integer.MAX_VALUE);
+        for (ScoreDoc scoreDoc : results.scoreDocs)
+        {
+            if(scoreDoc.doc == doc_id) return scoreDoc.score;
+        }
+        return 0d;
     }
 
 }
