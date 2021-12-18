@@ -265,10 +265,10 @@ public class Util
     public static double get_sim(IndexReader reader, int doc_id, Query query) throws IOException
     {
         IndexSearcher searcher = new IndexSearcher(reader);
-        TopDocs results = searcher.search(query,Integer.MAX_VALUE);
+        TopDocs results = searcher.search(query, Integer.MAX_VALUE);
         for (ScoreDoc scoreDoc : results.scoreDocs)
         {
-            if(scoreDoc.doc == doc_id) return scoreDoc.score;
+            if (scoreDoc.doc == doc_id) return scoreDoc.score;
         }
         return 0d;
     }

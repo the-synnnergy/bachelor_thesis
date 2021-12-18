@@ -71,12 +71,13 @@ public class PreQueryCalc
     private final IndexReader reader;
     // tf-idf term vectors
     private final Map<String, Double[]> document_term_vectors = new HashMap<>();
-
-    public PreQueryCalc(IndexReader reader) throws IOException
+    private final Analyzer anal;
+    public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         this.reader = reader;
         collection_size = reader.getDocCount("body");
         total_tokens = reader.getSumTotalTermFreq("body");
+        this.anal = anal;
         Terms all_terms = MultiTerms.getTerms(reader, "body");
         TermsEnum all_terms_it = all_terms.iterator();
         while (all_terms_it.next() != null)
@@ -137,7 +138,7 @@ public class PreQueryCalc
 
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException
     {
-        this(generate_index(corpus));
+        this(generate_index(corpus), new EnglishAnalyzer());
         /*reader = generate_index(corpus);
         //extract IDF, tf for evey Document, TF over whole corpus, Document length as tokenized and the collection size from Lucene index.
         collection_size = reader.getDocCount("body");
@@ -233,7 +234,6 @@ public class PreQueryCalc
     public PrequeryFeatures get_prequery_features(String query) throws IOException
     {
         PrequeryFeatures features = new PrequeryFeatures();
-        Analyzer anal = new EnglishAnalyzer();
         TokenStream tokenStream = anal.tokenStream("body", query);
         List<String> tokens = new ArrayList<>();
         CharTermAttribute attr = tokenStream.addAttribute(CharTermAttribute.class);

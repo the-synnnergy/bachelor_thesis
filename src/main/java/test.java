@@ -279,7 +279,7 @@ public class test
         System.out.println("query vector now");
         System.out.println(Arrays.toString(get_query_idf_termvector("yourself", reader)));
         System.out.println();
-        PostQueryCalc pq = new PostQueryCalc(reader);
+        PostQueryCalc pq = new PostQueryCalc(reader, anal);
         PostQueryCalc.PostQueryFeatures pqc = pq.get_PostQueryFeatures("video recorder");
         pqc.print();
         //Map<Integer,Map<String,Double>> lol = get_document_probs(reader);

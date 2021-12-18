@@ -3,6 +3,7 @@ package FeaturesCalc;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -21,7 +22,7 @@ public class PostQueryCalc
      * Class for storing the features, so they can be returned and then easily extracted.
      */
 
-    public class PostQueryFeatures
+    public static class PostQueryFeatures
     {
         double subquery_overlap;
         double robustness_score;
@@ -50,11 +51,13 @@ public class PostQueryCalc
     private static final int MAX_HITS_WEIGHTED_INFORMATION_GAIN = 100;
     private static final int MAX_HITS_CLUSTERING = 100;
     private int collection_size;
+    private final Analyzer anal;
 
-    public PostQueryCalc(IndexReader reader) throws IOException
+    public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         this.reader = reader;
         document_to_termvectors = Util.get_idf_document_vectors(reader);
+        this.anal = anal;
     }
 
     public PostQueryFeatures get_PostQueryFeatures(String query) throws IOException
@@ -95,7 +98,7 @@ public class PostQueryCalc
     private double get_subquery_overlap(String query, IndexSearcher searcher) throws IOException
     {
         // get first then hits from query.
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query bool_query = qb.createBooleanQuery("body", query);
         TopDocs initial_result = searcher.search(bool_query, MAX_HITS_SUBQUERY);
         List<Integer> initial_indizes = new ArrayList<>();
@@ -119,7 +122,7 @@ public class PostQueryCalc
 
     private double get_robustness_score(String query, IndexSearcher searcher) throws IOException
     {
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query bool_query = qb.createBooleanQuery("body", query);
         TopDocs initial_result = searcher.search(bool_query, MAX_HITS_ROBUSTNESS_SCORE);
         List<Integer> ranked_list = new ArrayList<>();
@@ -154,7 +157,7 @@ public class PostQueryCalc
 
     private double get_first_rank_change(String query, IndexSearcher searcher) throws IOException
     {
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query bool_query = qb.createBooleanQuery("body", query);
         TopDocs initial_result = searcher.search(bool_query, MAX_HITS_ROBUSTNESS_SCORE);
         int top_hit = initial_result.scoreDocs[0].doc;
@@ -183,7 +186,7 @@ public class PostQueryCalc
 
     private double get_clustering_tendency(String query, IndexSearcher searcher) throws IOException
     {
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query bool_query = qb.createBooleanQuery("body", query);
         TopDocs top100 = searcher.search(bool_query, MAX_HITS_CLUSTERING);
         Set<Integer> doc_ids = new HashSet<>();
@@ -230,7 +233,7 @@ public class PostQueryCalc
     private double get_sim_query_for_mean(Set<Integer> sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException
     {
         int sampled_point = sampleable_points.stream().skip(ThreadLocalRandom.current().nextInt(sampleable_points.size())).findFirst().orElseThrow();
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query sampled_point_query = qb.createBooleanQuery("body", (reader.document(sampled_point).get("body")));
         TopDocs result_docs = searcher.search(sampled_point_query, Integer.MAX_VALUE);
         int marked_point = 0;
@@ -315,7 +318,7 @@ public class PostQueryCalc
 
     private double get_spatial_autocorrelation(String query, IndexSearcher searcher) throws IOException
     {
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query bool_query = qb.createBooleanQuery("body", query);
         TopDocs hits = searcher.search(bool_query, 50);
         double[] original_scores = new double[hits.scoreDocs.length];
@@ -357,11 +360,11 @@ public class PostQueryCalc
 
     private double get_weighted_information_gain(String query, IndexSearcher searcher) throws IOException
     {
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query q = qb.createBooleanQuery("body", query);
         TopDocs top_hits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);
         //TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
-        List<String> query_terms = get_query_terms(query, reader, new EnglishAnalyzer());
+        List<String> query_terms = get_query_terms(query, reader, anal);
         double lambda = 1 / Math.sqrt(query_terms.size());
         double weighted_information_gain = 0;
         Map<String, Double> corpus_probs = get_corpus_probs(reader);
@@ -387,7 +390,7 @@ public class PostQueryCalc
 
     private double get_normalized_query_commitment(String query, IndexSearcher searcher) throws IOException
     {
-        QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+        QueryBuilder qb = new QueryBuilder(anal);
         Query q = qb.createBooleanQuery("body", query);
         TopDocs top_hits = searcher.search(q, 100);
         TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
