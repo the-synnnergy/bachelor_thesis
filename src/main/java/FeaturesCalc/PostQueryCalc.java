@@ -1,5 +1,7 @@
 package FeaturesCalc;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -41,6 +43,19 @@ public class PostQueryCalc
             System.out.println("spatial_autocorreleation:" + spatial_autocorrelation);
             System.out.println("WIG:" + weighted_information_gain);
             System.out.println("Normalized query commitment:" + normalized_query_commitment);
+        }
+
+        public ArrayList<Pair<String,Double>> to_ArrayList_named(String name)
+        {
+            ArrayList<Pair<String,Double>> arr_list = new ArrayList<>();
+            arr_list.add(new ImmutablePair<>(name+"subquery_overlap",subquery_overlap));
+            arr_list.add(new ImmutablePair<>(name+"robustness_score",robustness_score));
+            arr_list.add(new ImmutablePair<>(name+"first_rank_change",first_rank_change));
+            arr_list.add(new ImmutablePair<>(name+"clustering_tendency",clustering_tendency));
+            arr_list.add(new ImmutablePair<>(name+"spatial_autocorrelation",spatial_autocorrelation));
+            arr_list.add(new ImmutablePair<>(name+"weighted_information_gain",weighted_information_gain));
+            arr_list.add(new ImmutablePair<>(name+"normalized_query_commitment",normalized_query_commitment));
+            return arr_list;
         }
     }
 

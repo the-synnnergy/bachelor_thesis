@@ -1,5 +1,7 @@
 package FeaturesCalc;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -8,6 +10,8 @@ import org.apache.lucene.store.Directory;
 import weka.core.Instance;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class FeaturesCalc
@@ -21,12 +25,41 @@ public class FeaturesCalc
         JELINEK_MERCER;
     }
 
+    class InstanceData{
+        double[] sim_scores;
+        PostQueryCalc.PostQueryFeatures[] postq_features;
+        PreQueryCalc.PrequeryFeatures[] preq_features;
+
+        public InstanceData(){};
+
+        public ArrayList<Pair<String,Double>> get_iterableList(){
+            ArrayList<Pair<String,Double>> features = new ArrayList<>();
+            for(Similarites sim : Similarites.values()){
+                String name = sim.name()+"_score";
+                features.add(new ImmutablePair<>(name,sim_scores[sim.ordinal()]));
+            }
+            for(Similarites sim : Similarites.values()){
+                for(int i = 0;i< preq_features.length;i++){
+                    String name = sim.name()+"_preq_";
+                    features.addAll(preq_features[i].to_ArrayList_named(name));
+                }
+            }
+            for(Similarites sim : Similarites.values()){
+                for(int i = 0;i< postq_features.length;i++){
+                    String name = sim.name()+"_preq_";
+                    features.addAll(postq_features[i].to_ArrayList_named(name));
+                }
+            }
+            return features;
+        }
+    }
+
     public static List<String> get_features()
     {
         return null;
     }
 
-    public static Instance get_inst_to_classify(IndexReader[] readers, String query, String query_identfier, Directory[] query_indices) throws IOException
+    public static Instance get_inst_to_classify_from_base(IndexReader[] readers, String query, String query_identfier, Directory[] query_indices) throws IOException
     {
         PostQueryCalc.PostQueryFeatures[] postq_features = new PostQueryCalc.PostQueryFeatures[readers.length];
         PreQueryCalc.PrequeryFeatures[] preq_features = new PreQueryCalc.PrequeryFeatures[readers.length];
@@ -45,6 +78,7 @@ public class FeaturesCalc
         {
             postquery[sim.ordinal()] = new PostQueryCalc(readers[sim.ordinal()], new EnglishAnalyzer());
             prequery[sim.ordinal()] = new PreQueryCalc(readers[sim.ordinal()], new EnglishAnalyzer());
+
         }
         for (Similarites sim : Similarites.values())
         {
@@ -62,5 +96,7 @@ public class FeaturesCalc
         return null;
     }
 
-
+    public static Instance create_instance(InstanceData data){
+        return null;
+    }
 }

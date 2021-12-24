@@ -1,6 +1,7 @@
 package FeaturesCalc;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -47,10 +48,49 @@ public class PreQueryCalc
         double simplified_clarity_score;
         double coherence_score;
 
+        public PrequeryFeatures()
+        {
+        }
+
         @Override
         public String toString()
         {
             return (Arrays.toString(idf_features) + " " + Arrays.toString(ictf_features) + " " + Arrays.toString(var_features) + " " + Arrays.toString(entropy_features) + " " + Arrays.toString(var_features)) + " ;queryscope " + query_scope + ";scs:" + simplified_clarity_score;
+        }
+
+        public ArrayList<Pair<String, Double>> to_ArrayList_named(String name)
+        {
+            ArrayList<Pair<String, Double>> arr_list = new ArrayList<>();
+            arr_list.addAll(arr_features_to_arr_list(name));
+            arr_list.add(new ImmutablePair<>(name+"query_scope",query_scope));
+            arr_list.add(new ImmutablePair<>(name+"simplified_clarity_score",simplified_clarity_score));
+            arr_list.add(new ImmutablePair<>(name+"coherence_score",coherence_score));
+            return arr_list;
+        }
+
+        // bad method, but all other stuff is way more complicated.
+        private ArrayList<Pair<String, Double>> arr_features_to_arr_list(String name)
+        {
+            ArrayList<Pair<String, Double>> arr_list = new ArrayList<>();
+            arr_list.add(new ImmutablePair<>(name+"idf_features_avg", idf_features[0]));
+            arr_list.add(new ImmutablePair<>(name+"idf_features_max", idf_features[1]));
+            arr_list.add(new ImmutablePair<>(name+"idf_features_dev", idf_features[2]));
+            arr_list.add(new ImmutablePair<>(name+"ictf_features_avg", ictf_features[0]));
+            arr_list.add(new ImmutablePair<>(name+"ictf_features_max", ictf_features[1]));
+            arr_list.add(new ImmutablePair<>(name+"ictf_features_dev", ictf_features[2]));
+            arr_list.add(new ImmutablePair<>(name+"entropy_features_avg", entropy_features[0]));
+            arr_list.add(new ImmutablePair<>(name+"entropy_features_max", entropy_features[1]));
+            arr_list.add(new ImmutablePair<>(name+"entropy_features_dev", entropy_features[2]));
+            arr_list.add(new ImmutablePair<>(name+"var_features_avg", var_features[0]));
+            arr_list.add(new ImmutablePair<>(name+"var_features_max", var_features[1]));
+            arr_list.add(new ImmutablePair<>(name+"var_features_dev", var_features[2]));
+            arr_list.add(new ImmutablePair<>(name+"scq_features_avg", scq_features[0]));
+            arr_list.add(new ImmutablePair<>(name+"scq_features_max", scq_features[1]));
+            arr_list.add(new ImmutablePair<>(name+"scq_features_dev", scq_features[2]));
+            arr_list.add(new ImmutablePair<>(name+"pmi_features_avg", pmi_features[0]));
+            arr_list.add(new ImmutablePair<>(name+"pmi_features_max", pmi_features[1]));
+            arr_list.add(new ImmutablePair<>(name+"pmi_features_dev", pmi_features[2]));
+            return arr_list;
         }
     }
 
@@ -72,6 +112,7 @@ public class PreQueryCalc
     // tf-idf term vectors
     private final Map<String, Double[]> document_term_vectors = new HashMap<>();
     private final Analyzer anal;
+
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         this.reader = reader;
