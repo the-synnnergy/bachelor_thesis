@@ -8,6 +8,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -98,5 +100,10 @@ public class FeaturesCalc
 
     public static Instance create_instance(InstanceData data){
         return null;
+    }
+
+    public static void to_arff_file(String filename, Instances dataset) throws Exception
+    {
+        ConverterUtils.DataSink.write(filename,dataset);
     }
 }

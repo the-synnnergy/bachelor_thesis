@@ -1,5 +1,8 @@
 package FeaturesCalc;
 
+import weka.attributeSelection.AttributeSelection;
+import weka.attributeSelection.CfsSubsetEval;
+import weka.attributeSelection.GreedyStepwise;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 
@@ -23,11 +26,28 @@ public class Classifier
         return rf;
     }
 
-    public static void saveClassifier(RandomForest rf, String filename) throws IOException
-    {
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename));
-        oos.writeObject(rf);
-        oos.flush();
-        oos.close();
+    public static Instances select_important_attributes(Instances instances){
+        return null;
     }
+
+    /**
+     *  returns indices of indices of important features via Cfs Subseteval #TODO make more generic
+     * @param instances
+     * @return
+     * @throws Exception
+     */
+    public static int[] get_subselected_features_indices(Instances instances) throws Exception
+    {
+        AttributeSelection attsel = new AttributeSelection();  // package weka.attributeSelection!
+        CfsSubsetEval eval = new CfsSubsetEval();
+        GreedyStepwise search = new GreedyStepwise();
+        search.setSearchBackwards(true);
+        attsel.setEvaluator(eval);
+        attsel.setSearch(search);
+        attsel.SelectAttributes(instances);
+        // obtain the attribute indices that were selected
+        return attsel.selectedAttributes();
+    }
+
+
 }
