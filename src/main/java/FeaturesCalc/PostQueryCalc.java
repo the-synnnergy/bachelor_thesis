@@ -34,7 +34,7 @@ public class PostQueryCalc
         double weighted_information_gain;
         double normalized_query_commitment;
 
-        public PostQueryFeatures(){};
+        public PostQueryFeatures(){}
 
         public void print()
         {
