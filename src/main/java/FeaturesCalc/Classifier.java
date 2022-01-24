@@ -26,9 +26,6 @@ public class Classifier
         return rf;
     }
 
-    public static Instances select_important_attributes(Instances instances){
-        return null;
-    }
 
     /**
      *  returns indices of indices of important features via Cfs Subseteval #TODO make more generic

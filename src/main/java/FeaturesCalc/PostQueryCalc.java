@@ -24,7 +24,7 @@ public class PostQueryCalc
      * Class for storing the features, so they can be returned and then easily extracted.
      */
 
-    public static class PostQueryFeatures
+    public class PostQueryFeatures
     {
         double subquery_overlap;
         double robustness_score;
@@ -33,6 +33,8 @@ public class PostQueryCalc
         double spatial_autocorrelation;
         double weighted_information_gain;
         double normalized_query_commitment;
+
+        public PostQueryFeatures(){};
 
         public void print()
         {
