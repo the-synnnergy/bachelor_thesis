@@ -17,10 +17,8 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class IndexFeatureData
 {
@@ -114,6 +112,12 @@ class InstanceData
             }
         }
         return features;
+    }
+
+    @Override
+    public String toString(){
+        List<Pair<String, Double>> list = get_iterableList();
+        return list.stream().map(a -> String.valueOf(a.getRight())).collect(Collectors.joining(","));
     }
 }
 
