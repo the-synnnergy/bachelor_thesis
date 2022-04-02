@@ -99,7 +99,7 @@ public class Util
             long total_freq = all_terms_it.totalTermFreq();
             long doc_freq = all_terms_it.docFreq();
             PostingsEnum postings = all_terms_it.postings(null);
-            int doc_id = 0;
+            int doc_id;
             double idf = (1 + Math.log(((double) doc_freq + 1) / (total_freq + 1)));
             while ((doc_id = postings.nextDoc()) != NO_MORE_DOCS)
             {

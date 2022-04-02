@@ -18,12 +18,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static FeaturesCalc.Util.*;
 
+/**
+ * Class for calculating the Postquery features mentioned in C. Mills. #TODO add reference
+ */
 public class PostQueryCalc
 {
     /**
      * Class for storing the features, so they can be returned and then easily extracted.
      */
-
     public class PostQueryFeatures
     {
         double subquery_overlap;
@@ -47,6 +49,11 @@ public class PostQueryCalc
             System.out.println("Normalized query commitment:" + normalized_query_commitment);
         }
 
+        /**
+         * Return array list with tuples containing feature name and value
+         * @param name name prefix for feature
+         * @return array list with tuples containing feature name with given prefix name and values
+         */
         public ArrayList<Pair<String,Double>> to_ArrayList_named(String name)
         {
             ArrayList<Pair<String,Double>> arr_list = new ArrayList<>();
@@ -70,6 +77,12 @@ public class PostQueryCalc
     private int collection_size;
     private final Analyzer anal;
 
+    /***
+     * Constructor for PostqueryCalc with given reader and analyzer
+     * @param reader IndexReader where the Postquery features should be calculcated on
+     * @param anal Analyzer which should be used for Stemming and stopword removal, must be the same(language, stopwords, stemming rules) as used in Index!
+     * @throws IOException -
+     */
     public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         this.reader = reader;
@@ -77,12 +90,18 @@ public class PostQueryCalc
         this.anal = anal;
     }
 
+    /***
+     * return an object containing Postquery features values for a given query
+     * @param query the string for which the features should be calculated
+     * @return PostqueryFeatures object which contains all feature values
+     * @throws IOException -
+     */
     public PostQueryFeatures get_PostQueryFeatures(String query) throws IOException
     {
         PostQueryFeatures features = new PostQueryFeatures();
         IndexSearcher searcher = new IndexSearcher(reader);
         long time = System.currentTimeMillis();
-        features.clustering_tendency = get_clustering_tendency(query, searcher);
+        //features.clustering_tendency = get_clustering_tendency(query, searcher);
         System.out.println("Clustering Tendency:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.first_rank_change = get_first_rank_change(query, searcher);
@@ -91,10 +110,10 @@ public class PostQueryCalc
         features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
         System.out.println("Normalized query commitment:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
-        features.robustness_score = get_robustness_score(query, searcher);
+        //features.robustness_score = get_robustness_score(query, searcher);
         System.out.println("Get robustness score:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
-        features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
+        //features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
         System.out.println("Spatial autocorrelation:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.subquery_overlap = get_subquery_overlap(query, searcher);
@@ -106,10 +125,11 @@ public class PostQueryCalc
     }
 
     /**
-     * @param query
-     * @param searcher
-     * @return
-     * @throws IOException
+     * Method to calculated subquery overlap
+     * @param query String which is to be queried and for which subquery overlap is calculated, preprocessed with analyzer
+     * @param searcher IndexSearcher on the given IndexReader in the constructor
+     * @return subquery overlap as double
+     * @throws IOException -
      */
 
     private double get_subquery_overlap(String query, IndexSearcher searcher) throws IOException
@@ -137,6 +157,13 @@ public class PostQueryCalc
         return new StandardDeviation().evaluate(overlapping_results.stream().mapToDouble(Double::doubleValue).toArray());
     }
 
+    /**
+     *  Calculates the robustness score for given query
+     * @param query String which is to be queried and for which robustness score is calculated, preprocessed with analyzer
+     * @param searcher IndexSearcher on the given IndexReader in the constructor
+     * @return robustness score as double
+     * @throws IOException
+     */
     private double get_robustness_score(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
@@ -171,7 +198,13 @@ public class PostQueryCalc
         return spearman_rank_correlations.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
     }
 
-
+    /***
+     * Calculcates the first rank change for the given query
+     * @param query String which is to be queried, only preprocessed with analyzer
+     * @param searcher IndexSearcher on IndexReader used in constructor
+     * @return first rank change as double
+     * @throws IOException
+     */
     private double get_first_rank_change(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
@@ -201,6 +234,13 @@ public class PostQueryCalc
         return first_rank_change_sum;
     }
 
+    /**
+     * Calculates the clustering tendency for a given query
+     * @param query String for which clustering tendency is calculated, needs to be preprocessed
+     * @param searcher IndexSearcher on IndexReader used in Constructor
+     * @return Clustering tendency as double
+     * @throws IOException
+     */
     private double get_clustering_tendency(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
@@ -247,6 +287,17 @@ public class PostQueryCalc
         return mean * (1.0d / termvector_length) * sum;
     }
 
+    /**
+     * Submethod for calculating the Sim_query from Mill paper which is needed for Clustering Tendency
+     * @param sampleable_points Document ids which are not in the top 100 results from query
+     * @param searcher IndexSearcher on IndexReader used in Constructor
+     * @param doc_ids Top100 query document ids
+     * @param top100 TopDocs result from query
+     * @param term_vectors idf vectors for index
+     * @param query query string
+     * @return sim query for one samples point
+     * @throws IOException
+     */
     private double get_sim_query_for_mean(Set<Integer> sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException
     {
         int sampled_point = sampleable_points.stream().skip(ThreadLocalRandom.current().nextInt(sampleable_points.size())).findFirst().orElseThrow();
@@ -302,6 +353,13 @@ public class PostQueryCalc
         return sim_query_dmp_dnn / sim_query_psp_dmp;
     }
 
+    /**
+     *
+     * @param first
+     * @param second
+     * @param query_termvector
+     * @return
+     */
     private double calc_sim_query(double[] first, double[] second, double[] query_termvector)
     {
         // maybe do some assertions here
@@ -333,6 +391,13 @@ public class PostQueryCalc
         return sim_query_part1 * sim_query_part2;
     }
 
+    /**
+     * Method to calculated spatial autocorrelation for given query
+     * @param query String for which the spatial autocorrelation is calculated
+     * @param searcher IndexSearcher on IndexReader used in constructor
+     * @return spatial autocorrelation as double
+     * @throws IOException
+     */
     private double get_spatial_autocorrelation(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
@@ -370,8 +435,9 @@ public class PostQueryCalc
     }
 
 
-    /**
-     * @param query
+    /** Calculated the weighted information for given query string
+     * @param query String for which weighted information is calculated
+     * @param searcher
      * @return
      */
 

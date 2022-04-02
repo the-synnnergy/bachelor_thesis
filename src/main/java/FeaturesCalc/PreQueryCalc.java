@@ -132,8 +132,8 @@ public class PreQueryCalc
             while ((doc_id = postings.nextDoc()) != NO_MORE_DOCS)
             {
                 // Add frequencies to Map key for document length! #TODO fix this to readable!
-                doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(), 0) + postings.freq());
-                tf_map.put(reader.document(doc_id).getField("title").toString(), postings.freq());
+                doc_length_map.put(reader.document(doc_id).getField("title").stringValue(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(), 0) + postings.freq());
+                tf_map.put(reader.document(doc_id).getField("title").stringValue(), postings.freq());
             }
             // Put map with Frequency for Terms in all Documents in Termmap, so we can find the Termmap via Term and then find frequency via Document title!
             map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
@@ -283,6 +283,8 @@ public class PreQueryCalc
         {
             tokens.add(attr.toString());
         }
+        tokenStream.end();
+        tokenStream.close();
         tokens = remove_noncorpus_tokens(tokens);
         // #TODO refactor this to filter tokens out first...
         features.idf_features = get_idf_features(tokens);
@@ -554,7 +556,7 @@ public class PreQueryCalc
             }
 
         }
-        avg_pmi = (2 * (CombinatoricsUtils.factorial(token_set.size() - 1)) / ((double) CombinatoricsUtils.factorial(token_set.size()))) * avg_pmi;
+        avg_pmi = (2.0d/token_set.size()) * avg_pmi;
         return new double[]{avg_pmi, max_pmi};
     }
 

@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 class IndexFeatureData
 {
+    // Maps for saving features calculation, prefix query saves results for queries from "query index" and target for "target index"
     Map<Integer, PostQueryCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
     Map<Integer, PreQueryCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
     Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
@@ -33,92 +34,26 @@ class IndexFeatureData
     {
     }
 
-    public float get_score_for_doc(int i, int j, boolean query_is_searched)
+    public float get_score_for_doc(int query_doc_id, int target_doc_id, boolean query_is_searched)
     {
         TopDocs top = null;
         if (query_is_searched)
         {
-            top = query_top_docs.get(i);
-        } else
+            top = query_top_docs.get(query_doc_id);
+            for(ScoreDoc doc: top.scoreDocs){
+                if(doc.doc == target_doc_id) return doc.score;
+            }
+        }else
         {
-            top = target_top_docs.get(i);
+            top = target_top_docs.get(target_doc_id);
+            for(ScoreDoc doc: top.scoreDocs){
+                if(doc.doc == query_doc_id) return doc.score;
+            }
         }
-        for(ScoreDoc doc: top.scoreDocs){
-            if(doc.doc == j) return doc.score;
-        }
+
         return 0f;
     }
 
-}
-
-class InstanceData
-{
-    double[] sim_scores_query;
-    double[] sim_scores_target;
-    PostQueryCalc.PostQueryFeatures[] postq_features_query;
-    PreQueryCalc.PrequeryFeatures[] preq_features_query;
-    PostQueryCalc.PostQueryFeatures[] postq_features_target;
-    PreQueryCalc.PrequeryFeatures[] preq_features_target;
-    String identifier_query;
-    String identifier_target;
-
-    public InstanceData()
-    {
-    }
-
-    public ArrayList<Pair<String, Double>> get_iterableList()
-    {
-        ArrayList<Pair<String, Double>> features = new ArrayList<>();
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            String name = sim.name() + "_query_score";
-            features.add(new ImmutablePair<>(name, sim_scores_query[sim.ordinal()]));
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            String name = sim.name() + "_target_score";
-            features.add(new ImmutablePair<>(name, sim_scores_target[sim.ordinal()]));
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            for (PreQueryCalc.PrequeryFeatures preq_feature : preq_features_query)
-            {
-                String name = sim.name() + "_query_preq_";
-                features.addAll(preq_feature.to_ArrayList_named(name));
-            }
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            for (PostQueryCalc.PostQueryFeatures postq_feature : postq_features_query)
-            {
-                String name = sim.name() + "_query_preq_";
-                features.addAll(postq_feature.to_ArrayList_named(name));
-            }
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            for (PreQueryCalc.PrequeryFeatures preq_feature : preq_features_target)
-            {
-                String name = sim.name() + "_target_preq_";
-                features.addAll(preq_feature.to_ArrayList_named(name));
-            }
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            for (PostQueryCalc.PostQueryFeatures postq_feature : postq_features_target)
-            {
-                String name = sim.name() + "_target_preq_";
-                features.addAll(postq_feature.to_ArrayList_named(name));
-            }
-        }
-        return features;
-    }
-
-    @Override
-    public String toString(){
-        List<Pair<String, Double>> list = get_iterableList();
-        return list.stream().map(a -> String.valueOf(a.getRight())).collect(Collectors.joining(","));
-    }
 }
 
 public class FeaturesCalc
@@ -147,40 +82,10 @@ public class FeaturesCalc
      * @return
      * @throws IOException
      */
-    public static Instance get_inst_to_classify_from_base(IndexReader[] non_query_readers, String query, String query_identfier, IndexReader[] query_readers) throws IOException
+    public static Instances get_insts_to_classify_from_lucene(IndexReader[] non_query_readers, String query, String query_identfier, IndexReader[] query_readers) throws IOException
     {
-        PostQueryCalc.PostQueryFeatures[] postq_features = new PostQueryCalc.PostQueryFeatures[readers.length];
-        PreQueryCalc.PrequeryFeatures[] preq_features = new PreQueryCalc.PrequeryFeatures[readers.length];
-        PostQueryCalc[] postquery = new PostQueryCalc[readers.length];
-        PreQueryCalc[] prequery = new PreQueryCalc[readers.length];
-        double[] sim_scores = new double[readers.length];
-        IndexWriterConfig conf = new IndexWriterConfig(new EnglishAnalyzer());
-        conf.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
-        IndexWriter[] query_indices_writers = new IndexWriter[query_indices.length];
-        for (int i = 0; i < query_indices_writers.length; i++)
-        {
-            query_indices_writers[i] = new IndexWriter(query_indices[i], conf);
+        // Arrays for Postquery and Prequery Features
 
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : Similarities.values())
-        {
-            postquery[sim.ordinal()] = new PostQueryCalc(readers[sim.ordinal()], new EnglishAnalyzer());
-            prequery[sim.ordinal()] = new PreQueryCalc(readers[sim.ordinal()], new EnglishAnalyzer());
-
-        }
-        for (FeaturesCalc.FeaturesCalc.Similarities sim : Similarities.values())
-        {
-            postq_features[sim.ordinal()] = postquery[sim.ordinal()].get_PostQueryFeatures(query);
-            preq_features[sim.ordinal()] = prequery[sim.ordinal()].get_prequery_features(query);
-        }
-        /**
-         * #TODO
-         * 1. Add query to the writers!
-         * 2. Prune List of results! by eliminating
-         * 3. Get both scores from index
-         * 4. Get Features from Writer side!
-         * 5. Constructs instances! ( Method in util maybe? or here)
-         */
         return null;
     }
 
@@ -195,7 +100,7 @@ public class FeaturesCalc
     }
 
 
-    public static Instances get_full_dataset(IndexReader[] query_reader, IndexReader[] target_reader, Analyzer anal) throws IOException
+    public static List<InstanceData> get_full_dataset(IndexReader[] query_reader, IndexReader[] target_reader, String stopwords) throws IOException
     {
         assert Similarities.values().length == query_reader.length;
         assert Similarities.values().length == target_reader.length;
@@ -203,7 +108,7 @@ public class FeaturesCalc
         for (Similarities sim : Similarities.values())
         {
             int i = sim.ordinal();
-            data[i] = get_IndexInstanceData(query_reader[i], target_reader[i], anal);
+            data[i] = get_IndexInstanceData(query_reader[i], target_reader[i], null);
         }
         // Assert all indices have the same length
         List<InstanceData> instance_data = new ArrayList<>();
@@ -227,9 +132,10 @@ public class FeaturesCalc
                 instance_data.add(instance);
             }
         }
+        return instance_data;
     }
 
-    public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, Analyzer anal) throws IOException
+    public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, String stopwords) throws IOException
     {
         Map<Integer, PostQueryCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
         Map<Integer, PreQueryCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
@@ -237,10 +143,10 @@ public class FeaturesCalc
         Map<Integer, PreQueryCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
         Map<Integer, TopDocs> query_top_docs = new HashMap<>();
         Map<Integer, TopDocs> target_top_docs = new HashMap<>();
-        PreQueryCalc pre_calc_query = new PreQueryCalc(target_reader, anal);
-        PreQueryCalc pre_calc_target = new PreQueryCalc(target_reader, anal);
-        PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, anal);
-        PostQueryCalc post_calc_target = new PostQueryCalc(query_reader, anal);
+        PreQueryCalc pre_calc_query = new PreQueryCalc(query_reader, new EnglishAnalyzer());
+        PreQueryCalc pre_calc_target = new PreQueryCalc(target_reader, new EnglishAnalyzer());
+        PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, new EnglishAnalyzer());
+        PostQueryCalc post_calc_target = new PostQueryCalc(query_reader, new EnglishAnalyzer());
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();
@@ -253,8 +159,8 @@ public class FeaturesCalc
             query_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
             query_preq_map.put(i, pre_calc_target.get_prequery_features(query));
         }
-        get_top_docs_to_map(query_reader, target_reader, anal, query_top_docs);
-        get_top_docs_to_map(target_reader, query_reader, anal, target_top_docs);
+        get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs);
+        get_top_docs_to_map(target_reader, query_reader, new EnglishAnalyzer(), target_top_docs);
         IndexFeatureData data = new IndexFeatureData();
         data.query_postq_map = query_postq_map;
         data.query_preq_map = query_preq_map;
