@@ -9,12 +9,12 @@ import java.util.stream.Collectors;
 
 public class InstanceData
 {
-    double[] sim_scores_query;
-    double[] sim_scores_target;
-    PostQueryCalc.PostQueryFeatures[] postq_features_query;
-    PreQueryCalc.PrequeryFeatures[] preq_features_query;
-    PostQueryCalc.PostQueryFeatures[] postq_features_target;
-    PreQueryCalc.PrequeryFeatures[] preq_features_target;
+    double[] sim_scores_query = new double[FeaturesCalc.Similarities.values().length];
+    double[] sim_scores_target = new double[FeaturesCalc.Similarities.values().length];
+    PostQueryCalc.PostQueryFeatures[] postq_features_query = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
+    PreQueryCalc.PrequeryFeatures[] preq_features_query = new PreQueryCalc.PrequeryFeatures[FeaturesCalc.Similarities.values().length];
+    PostQueryCalc.PostQueryFeatures[] postq_features_target = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
+    PreQueryCalc.PrequeryFeatures[] preq_features_target = new PreQueryCalc.PrequeryFeatures[FeaturesCalc.Similarities.values().length];
     String identifier_query;
     String identifier_target;
 

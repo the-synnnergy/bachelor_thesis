@@ -127,8 +127,8 @@ public class FeaturesCalc
                     instance.postq_features_query[sim.ordinal()] = data[sim.ordinal()].query_postq_map.get(i);
                     instance.preq_features_query[sim.ordinal()] = data[sim.ordinal()].query_preq_map.get(j);
                 }
-                instance.identifier_query = query_reader[0].document(i).getField("name").stringValue();
-                instance.identifier_target = target_reader[0].document(j).getField("name").stringValue();
+                instance.identifier_query = query_reader[0].document(i).getField("title").stringValue();
+                instance.identifier_target = target_reader[0].document(j).getField("title").stringValue();
                 instance_data.add(instance);
             }
         }

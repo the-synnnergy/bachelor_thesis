@@ -89,7 +89,6 @@ public class PreQueryCalc
             arr_list.add(new ImmutablePair<>(name+"scq_features_dev", scq_features[2]));
             arr_list.add(new ImmutablePair<>(name+"pmi_features_avg", pmi_features[0]));
             arr_list.add(new ImmutablePair<>(name+"pmi_features_max", pmi_features[1]));
-            arr_list.add(new ImmutablePair<>(name+"pmi_features_dev", pmi_features[2]));
             return arr_list;
         }
     }
