@@ -156,8 +156,8 @@ public class FeaturesCalc
         for (int i = 0; i < target_reader.numDocs(); i++)
         {
             String query = target_reader.document(i).getField("body").stringValue();
-            query_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
-            query_preq_map.put(i, pre_calc_target.get_prequery_features(query));
+            target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
+            target_preq_map.put(i, pre_calc_target.get_prequery_features(query));
         }
         get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs);
         get_top_docs_to_map(target_reader, query_reader, new EnglishAnalyzer(), target_top_docs);
