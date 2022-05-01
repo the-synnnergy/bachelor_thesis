@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class iTrustCodeParser
+public class iTrustParser
 {
     static String path = null;
 
@@ -39,4 +39,5 @@ public class iTrustCodeParser
         assert name_to_filepath.size() == node_list.getLength();
         return name_to_filepath;
     }
+
 }
