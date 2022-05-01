@@ -59,7 +59,7 @@ class IndexFeatureData
 public class FeaturesCalc
 {
 
-    enum Similarities
+    public enum Similarities
     {
         CLASSIC_SIM,
         BM_25,
