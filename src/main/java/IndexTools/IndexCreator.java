@@ -27,12 +27,12 @@ import java.util.Map;
 
 public class IndexCreator
 {
-    public static String[] createIndices(String index_basepath, Map<String, String> name_to_content) throws IOException
+    public static String[] createIndices(String index_basepath, Map<String, String> path_to_content) throws IOException
     {
         String[] index_paths = new String[FeaturesCalc.Similarities.values().length];
         for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
         {
-            index_paths[sim.ordinal()] = createIndex(sim, index_basepath, name_to_content);
+            index_paths[sim.ordinal()] = createIndex(sim, index_basepath, path_to_content);
         }
         return index_paths;
     }
