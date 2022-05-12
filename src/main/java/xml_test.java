@@ -7,12 +7,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 import static IndexTools.IndexCreator.createIndices;
-import static XMLParser.iTrustParser.get_NameFileMap;
-import static XMLParser.iTrustParser.get_true_req_to_source_links;
+import static Parser.iTrustParser.get_NameFileMap;
 
 public class xml_test
 {

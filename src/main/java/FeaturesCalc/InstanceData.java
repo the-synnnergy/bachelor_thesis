@@ -73,7 +73,16 @@ public class InstanceData
     @Override
     public String toString()
     {
+        // does not work #TODO fix
         List<Pair<String, Double>> list = get_iterableList();
         return list.stream().map(a -> String.valueOf(a.getRight())).collect(Collectors.joining(","));
+    }
+
+    public String getIdentifierQuery() {
+        return this.identifier_query;
+    }
+
+    public String getIdentifierTarget(){
+        return this.identifier_target;
     }
 }

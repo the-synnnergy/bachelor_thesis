@@ -14,9 +14,7 @@ import org.apache.lucene.search.similarities.LMJelinekMercerSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -102,11 +100,16 @@ public class dataset_test
         IndexReader[] target_reader = new IndexReader[]{DirectoryReader.open(writer_bm25_target),DirectoryReader.open(writer_vsm_target),DirectoryReader.open(writer_jm_target),DirectoryReader.open(writer_dirichlet_target)};
         List<InstanceData> instanceData =  get_full_dataset(query_reader,target_reader,null);
         FileWriter writer = new FileWriter("output.txt");
+        BufferedWriter out = new BufferedWriter(writer);
         for(InstanceData instance : instanceData){
             List<Pair<String, Double>> data = instance.get_iterableList();
+            out.write(instance.getIdentifierQuery()+";");
+            out.write(instance.getIdentifierTarget()+";");
             for(Pair<String,Double> value : data){
-                writer.write(value.getLeft()+":"+value.getRight());
+                out.write(value.getLeft());
             }
+            out.newLine();
+            out.write(instance.toString());
         }
 
     }
