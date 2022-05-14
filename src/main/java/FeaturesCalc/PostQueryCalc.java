@@ -447,8 +447,9 @@ public class PostQueryCalc
         //TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
         List<String> query_terms = get_query_terms(query, reader, anal);
         double lambda = 1 / Math.sqrt(query_terms.size());
-        double weighted_information_gain = 0;
+        double weighted_information_gain = 0.0d;
         Map<String, Double> corpus_probs = get_corpus_probs(reader);
+        // #TODO better use getOrDefault and dont add all this bullshit to the maps(alot of zero values for many vocs!
         Map<Integer, Map<String, Double>> per_document_probs = Util.get_document_probs(reader);
         for (ScoreDoc scoreDoc : top_hits.scoreDocs)
         {
@@ -457,7 +458,8 @@ public class PostQueryCalc
             {
                 // #TODO fix this to a rational default !
                 if(corpus_probs.getOrDefault(term,0.0d) == 0.0d) continue;
-                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 0.0d) / corpus_probs.getOrDefault(term,1.0d));
+                if(term_probabilities_document.getOrDefault(term,0.0d) == 0.0d) continue;
+                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 1.0d) / corpus_probs.getOrDefault(term,1.0d));
             }
         }
         return weighted_information_gain / top_hits.scoreDocs.length;
