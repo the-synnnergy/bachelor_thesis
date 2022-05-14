@@ -83,8 +83,9 @@ public class PostQueryCalc
      * @param anal Analyzer which should be used for Stemming and stopword removal, must be the same(language, stopwords, stemming rules) as used in Index!
      * @throws IOException -
      */
-    public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException
+    public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException,IllegalArgumentException
     {
+        if(reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
         this.reader = reader;
         document_to_termvectors = Util.get_idf_document_vectors(reader);
         this.anal = anal;
@@ -263,7 +264,7 @@ public class PostQueryCalc
         double mean = 0;
         for (int i = 0; i < 100; i++)
         {
-            mean += get_sim_query_for_mean(sampleable_points, searcher, doc_ids, top100, term_vectors, query);
+            mean += get_sim_query_for_mean(sampleable_points.toArray(new Integer[0]), searcher, doc_ids, top100, term_vectors, query);
         }
         mean = mean / 100;
         int termvector_length = term_vectors.get(0).length;
@@ -298,9 +299,9 @@ public class PostQueryCalc
      * @return sim query for one samples point
      * @throws IOException
      */
-    private double get_sim_query_for_mean(Set<Integer> sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException
+    private double get_sim_query_for_mean(Integer[] sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException
     {
-        int sampled_point = sampleable_points.stream().skip(ThreadLocalRandom.current().nextInt(sampleable_points.size())).findFirst().orElseThrow();
+        int sampled_point = sampleable_points[ThreadLocalRandom.current().nextInt(sampleable_points.length)];
         QueryBuilder qb = new QueryBuilder(anal);
         Query sampled_point_query = qb.createBooleanQuery("body", (reader.document(sampled_point).get("body")));
         TopDocs result_docs = searcher.search(sampled_point_query, Integer.MAX_VALUE);
@@ -458,7 +459,9 @@ public class PostQueryCalc
             System.out.println();
             for (String term : query_terms)
             {
-                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 0.0d) / corpus_probs.get(term));
+                // #TODO fix this to a rational default !
+                if(corpus_probs.getOrDefault(term,0.0d) == 0.0d) continue;
+                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 0.0d) / corpus_probs.getOrDefault(term,1.0d));
             }
         }
         return weighted_information_gain / top_hits.scoreDocs.length;
