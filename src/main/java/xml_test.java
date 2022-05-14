@@ -40,11 +40,13 @@ public class xml_test
             req_readers[sim.ordinal()] = DirectoryReader.open(FSDirectory.open(Paths.get(index_paths_req[sim.ordinal()])));
             java_readers[sim.ordinal()] = DirectoryReader.open(FSDirectory.open(Paths.get(index_paths_java[sim.ordinal()])));
         }
+        System.out.println("begin calculating features");
         List<InstanceData> data = get_full_dataset(req_readers,java_readers,null);
-        for(InstanceData instanceData : data)
+        System.out.println("Test");
+        /*for(InstanceData instanceData : data)
         {
             System.out.println(instanceData.toString());
-        }
+        }*/
         //Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/iTrust/","/home/marcel/Downloads/iTrust/answer_req_code.xml");
     }
 }

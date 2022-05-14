@@ -7,10 +7,7 @@ import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.util.QueryBuilder;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -137,12 +134,13 @@ public class FeaturesCalc
 
     public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, String stopwords) throws IOException
     {
+        Map<Integer, TopDocs> query_top_docs = new HashMap<>();
+        Map<Integer, TopDocs> target_top_docs = new HashMap<>();
         Map<Integer, PostQueryCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
         Map<Integer, PreQueryCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
         Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
         Map<Integer, PreQueryCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
-        Map<Integer, TopDocs> query_top_docs = new HashMap<>();
-        Map<Integer, TopDocs> target_top_docs = new HashMap<>();
+
         PreQueryCalc pre_calc_query = new PreQueryCalc(query_reader, new EnglishAnalyzer());
         PreQueryCalc pre_calc_target = new PreQueryCalc(target_reader, new EnglishAnalyzer());
         PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, new EnglishAnalyzer());
@@ -150,13 +148,13 @@ public class FeaturesCalc
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();
-            query_postq_map.put(i, post_calc_query.get_PostQueryFeatures(query));
+            //query_postq_map.put(i, post_calc_query.get_PostQueryFeatures(query));
             query_preq_map.put(i, pre_calc_query.get_prequery_features(query));
         }
         for (int i = 0; i < target_reader.numDocs(); i++)
         {
             String query = target_reader.document(i).getField("body").stringValue();
-            target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
+            //target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
             target_preq_map.put(i, pre_calc_target.get_prequery_features(query));
         }
         get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs);
@@ -173,6 +171,7 @@ public class FeaturesCalc
 
     private static void get_top_docs_to_map(IndexReader query_reader, IndexReader target_reader, Analyzer anal, Map<Integer, TopDocs> query_top_docs) throws IOException
     {
+        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query_raw = query_reader.document(i).getField("body").stringValue();

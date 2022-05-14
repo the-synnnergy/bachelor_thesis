@@ -75,7 +75,7 @@ public class PostQueryCalc
     private static final int MAX_HITS_WEIGHTED_INFORMATION_GAIN = 100;
     private static final int MAX_HITS_CLUSTERING = 100;
     private int collection_size;
-    private final Analyzer anal;
+    private Analyzer anal;
 
     /***
      * Constructor for PostqueryCalc with given reader and analyzer
@@ -100,6 +100,8 @@ public class PostQueryCalc
      */
     public PostQueryFeatures get_PostQueryFeatures(String query) throws IOException
     {
+        // #TODO hotfix only here, change to better code
+        this.anal = new EnglishAnalyzer();
         PostQueryFeatures features = new PostQueryFeatures();
         IndexSearcher searcher = new IndexSearcher(reader);
         long time = System.currentTimeMillis();

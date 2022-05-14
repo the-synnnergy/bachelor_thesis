@@ -114,6 +114,8 @@ public class PreQueryCalc
 
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
+        System.out.println("Making PRequeryCalc");
+        long time  = System.currentTimeMillis();
         this.reader = reader;
         collection_size = reader.getDocCount("body");
         total_tokens = reader.getSumTotalTermFreq("body");
@@ -174,7 +176,7 @@ public class PreQueryCalc
                 document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue()) * idf_map.get(entry.getKey());
             }
         }
-
+        System.out.println("it took:" + (System.currentTimeMillis() -time));
     }
 
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException
@@ -287,15 +289,34 @@ public class PreQueryCalc
         tokenStream.close();
         tokens = remove_noncorpus_tokens(tokens);
         // #TODO refactor this to filter tokens out first...
+        long time = System.currentTimeMillis();
         features.idf_features = get_idf_features(tokens);
+        System.out.println("idf:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.ictf_features = get_ictf_features(tokens);
+        System.out.println("ictf:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.entropy_features = get_entropy_features(tokens);
+        System.out.println("entropy:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.var_features = get_var_features(tokens);
+        System.out.println("var_features:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.scq_features = get_scq_features(tokens);
+        System.out.println("scq:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.query_scope = get_query_scope(tokens);
+        System.out.println("query_scope:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.simplified_clarity_score = get_sclarity_score(tokens);
+        System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.pmi_features = get_pmi_features(tokens);
+        System.out.println("pmi:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         features.coherence_score = get_coherence_score(tokens);
+        System.out.println("coherence_score:"+(System.currentTimeMillis()-time));
+        time = System.currentTimeMillis();
         return features;
     }
 
@@ -550,6 +571,7 @@ public class PreQueryCalc
                 double token_a_prob = topDocs1.scoreDocs.length / ((double) collection_size);
                 TopDocs topDocs2 = searcher.search(tq_b, Integer.MAX_VALUE);
                 double token_b_prob = topDocs2.scoreDocs.length / ((double) collection_size);
+                if(intersect_token_a_token_b == 0) continue;
                 double tmp_pmi = Math.log(intersect_token_a_token_b / (token_a_prob * token_b_prob));
                 avg_pmi += tmp_pmi;
                 if (tmp_pmi > max_pmi) max_pmi = tmp_pmi;
@@ -563,6 +585,7 @@ public class PreQueryCalc
     private double get_coherence_score(List<String> tokens)
     {
         // # TODO factor out this inner looopsss....
+
         // strip of nonexisten tokens in corpus
         List<String> token_set = new ArrayList<>();
         for (String token : tokens)
@@ -590,6 +613,7 @@ public class PreQueryCalc
                     double norm_j = 0d;
                     for (int k = 0; k < vector_i.length; k++)
                     {
+                        if(vector_i[k] == 0 || vector_j[k] == 0) continue;
                         dot_product += vector_i[k] + vector_j[k];
                         norm_i += Math.pow(vector_i[k], 2);
                         norm_j += Math.pow(vector_j[k], 2);
