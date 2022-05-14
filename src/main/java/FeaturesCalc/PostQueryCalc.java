@@ -102,7 +102,7 @@ public class PostQueryCalc
         PostQueryFeatures features = new PostQueryFeatures();
         IndexSearcher searcher = new IndexSearcher(reader);
         long time = System.currentTimeMillis();
-        //features.clustering_tendency = get_clustering_tendency(query, searcher);
+        features.clustering_tendency = get_clustering_tendency(query, searcher);
         System.out.println("Clustering Tendency:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.first_rank_change = get_first_rank_change(query, searcher);
@@ -111,10 +111,10 @@ public class PostQueryCalc
         features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
         System.out.println("Normalized query commitment:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
-        //features.robustness_score = get_robustness_score(query, searcher);
+        features.robustness_score = get_robustness_score(query, searcher);
         System.out.println("Get robustness score:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
-        //features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
+        features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
         System.out.println("Spatial autocorrelation:" + (System.currentTimeMillis() - time));
         time = System.currentTimeMillis();
         features.subquery_overlap = get_subquery_overlap(query, searcher);
@@ -324,23 +324,19 @@ public class PostQueryCalc
                 break;
             }
         }
-        int nearest_neighbor;
-        switch (marked_point_index)
+        final int found_docs_query = top100.scoreDocs.length-1;
+        int nearest_neighbor = 0;
+        if(marked_point_index == 0) nearest_neighbor = 1;
+        if(marked_point_index == top100.scoreDocs.length -1) nearest_neighbor = marked_point_index -1;
+        if(marked_point_index != 0 && marked_point_index != top100.scoreDocs.length-1)
         {
-            case 0:
-                nearest_neighbor = 1;
-                break;
-            case MAX_HITS_CLUSTERING:
-                nearest_neighbor = MAX_HITS_CLUSTERING - 1;
-                break;
-            default:
-                if (top100.scoreDocs[marked_point_index - 1].score > (top100.scoreDocs[marked_point_index + 1].score))
-                {
-                    nearest_neighbor = marked_point_index - 1;
-                } else
-                {
-                    nearest_neighbor = marked_point_index + 1;
-                }
+            if (top100.scoreDocs[marked_point_index - 1].score > (top100.scoreDocs[marked_point_index + 1].score))
+            {
+                nearest_neighbor = marked_point_index - 1;
+            } else
+            {
+                nearest_neighbor = marked_point_index + 1;
+            }
         }
         int nearest_neighbor_doc_id = top100.scoreDocs[nearest_neighbor].doc;
         int marked_point_doc_id = top100.scoreDocs[marked_point_index].doc;
@@ -442,6 +438,7 @@ public class PostQueryCalc
      * @return
      */
 
+    // #TODO doesnt seem to be working!
     private double get_weighted_information_gain(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
@@ -456,7 +453,6 @@ public class PostQueryCalc
         for (ScoreDoc scoreDoc : top_hits.scoreDocs)
         {
             Map<String, Double> term_probabilities_document = per_document_probs.get(scoreDoc.doc);
-            System.out.println();
             for (String term : query_terms)
             {
                 // #TODO fix this to a rational default !
