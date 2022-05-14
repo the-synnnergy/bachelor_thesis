@@ -170,7 +170,8 @@ public class PreQueryCalc
             for (Map.Entry<String, Integer> tf_entry : tf_map.entrySet())
             {
                 // change this by using idf maybe?
-                document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue()) * idf_map.get(tf_entry.getKey());
+                // #TODO yields Nullpointer Exception!
+                document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue()) * idf_map.get(entry.getKey());
             }
         }
 

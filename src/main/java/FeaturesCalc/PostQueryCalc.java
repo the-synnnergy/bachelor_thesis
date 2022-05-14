@@ -85,6 +85,7 @@ public class PostQueryCalc
      */
     public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException,IllegalArgumentException
     {
+        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         if(reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
         this.reader = reader;
         document_to_termvectors = Util.get_idf_document_vectors(reader);
