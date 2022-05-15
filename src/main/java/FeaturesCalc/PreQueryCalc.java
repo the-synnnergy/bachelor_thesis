@@ -3,7 +3,6 @@ package FeaturesCalc;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
@@ -17,6 +16,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.QueryBuilder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -99,7 +99,7 @@ public class PreQueryCalc
     // Term frequency for all Terms. String is the term and long is the freq in the corpus altogether.
     private final Map<String, Long> corpus_termfrequency = new HashMap<>();
     // Maps a term(String) to a Map cotaining the Documents Titles(String) and the freqs(Integer)
-    private final Map<String, Map<String, Integer>> map_to_termfrequency_map = new HashMap<>();
+    private final Map<String, Map<String, Integer>> terms_to_document_freqs = new HashMap<>();
     // idf for all terms(String key)
     private final Map<String, Float> idf_map = new HashMap<>();
     // maps the length for each document(String is title as key)
@@ -110,6 +110,8 @@ public class PreQueryCalc
     private final IndexReader reader;
     // tf-idf term vectors
     private final Map<String, Double[]> document_term_vectors = new HashMap<>();
+    // map for coherence score
+    private HashMap<Integer,HashMap<Integer,Float>>  cos_sims = new HashMap<>();
     private final Analyzer anal;
 
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
@@ -137,7 +139,7 @@ public class PreQueryCalc
                 tf_map.put(reader.document(doc_id).getField("title").stringValue(), postings.freq());
             }
             // Put map with Frequency for Terms in all Documents in Termmap, so we can find the Termmap via Term and then find frequency via Document title!
-            map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
+            terms_to_document_freqs.put(term.utf8ToString(), tf_map);
         }
 
         for (Map.Entry<String, Integer> entry : doc_length_map.entrySet())
@@ -168,7 +170,7 @@ public class PreQueryCalc
         for (Map.Entry<String, Long> entry : corpus_termfrequency.entrySet())
         {
             int index = term_to_vectorindex.get(entry.getKey());
-            Map<String, Integer> tf_map = map_to_termfrequency_map.get(entry.getKey());
+            Map<String, Integer> tf_map = terms_to_document_freqs.get(entry.getKey());
             for (Map.Entry<String, Integer> tf_entry : tf_map.entrySet())
             {
                 // change this by using idf maybe?
@@ -409,7 +411,7 @@ public class PreQueryCalc
         List<Double> entropies = new ArrayList<>();
         for (String token : tokens)
         {
-            Map<String, Integer> tf_map = map_to_termfrequency_map.get(token);
+            Map<String, Integer> tf_map = terms_to_document_freqs.get(token);
             if (tf_map == null) continue;
             query_terms++;
 
@@ -457,10 +459,10 @@ public class PreQueryCalc
     private Double calc_var_for_term(String token)
     {
         Double var = 0d;
-        Map<String, Integer> tf_freqs = map_to_termfrequency_map.get(token);
+        Map<String, Integer> tf_freqs = terms_to_document_freqs.get(token);
         if (tf_freqs == null) return null;
         double var_upper_sum = 0;
-        double[] wtds = new double[map_to_termfrequency_map.size()];
+        double[] wtds = new double[terms_to_document_freqs.size()];
         int i = 0;
         for (Map.Entry<String, Integer> entry : tf_freqs.entrySet())
         {
@@ -485,7 +487,7 @@ public class PreQueryCalc
         Set<String> documents_containing_queryterms = new HashSet<>();
         for (String token : tokens)
         {
-            Map<String, Integer> docs = map_to_termfrequency_map.get(token);
+            Map<String, Integer> docs = terms_to_document_freqs.get(token);
             if (docs == null) continue;
             for (Map.Entry<String, Integer> entry : docs.entrySet())
             {
@@ -598,7 +600,7 @@ public class PreQueryCalc
         {
             double tmp_score = 0d;
             // get all documents containing term.
-            Map<String, Integer> tf_map = map_to_termfrequency_map.get(token);
+            Map<String, Integer> tf_map = terms_to_document_freqs.get(token);
             // for all documents calculate the sum..
             ArrayList<Map.Entry<String, Integer>> tf_list = new ArrayList<>(tf_map.entrySet());
             for (int i = 0; i < tf_list.size(); i++)
@@ -626,6 +628,54 @@ public class PreQueryCalc
             coherence_score += tmp_score / (tf_list.size() * tf_list.size() - 1);
         }
         return coherence_score;
+    }
+
+    /**
+     * #TODO needs to use stripped tokens
+     * @param tokens
+     * @return
+     */
+    private double better_coherence_score(List<String> tokens)
+    {
+        double coherence_score = 0;
+        int[] docs = null;
+        for(String token : tokens)
+        {
+            for (int i = 0; i < docs.length; i++)
+            {
+                int doc_id = docs[i];
+                for (int j = i + 1; j <docs.length; j++)
+                {
+                    coherence_score += cos_sims.get(doc_id).getOrDefault(docs[j],0.0f);
+                }
+            }
+            coherence_score = coherence_score/((double)(docs.length * (docs.length-1)));
+        }
+
+
+        return coherence_score/((double) tokens.size());
+    }
+
+    private HashMap<Integer,HashMap<Integer,Float>> precalcQueries() throws IOException
+    {
+        IndexSearcher searcher = new IndexSearcher(this.reader);
+        HashMap<Integer,HashMap<Integer,Float>>  cos_sims = new HashMap<>();
+        for(int i = 0;i <reader.numDocs();i++)
+        {
+            TopScoreDocCollector collector = TopScoreDocCollector.create(Integer.MAX_VALUE,Integer.MAX_VALUE);
+            QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
+            Query q = qb.createBooleanQuery("body",reader.document(i).getField("body").stringValue());
+            searcher.search(q,collector);
+            ScoreDoc[] scoreDocs = collector.topDocs().scoreDocs;
+            HashMap<Integer,Float> cos_sims_for_doc = new HashMap<>();
+            for(ScoreDoc scoreDoc : scoreDocs)
+            {
+                cos_sims_for_doc.put(scoreDoc.doc,scoreDoc.score);
+            }
+            cos_sims.put(i,cos_sims_for_doc);
+        }
+        return cos_sims;
+
     }
 
 }
