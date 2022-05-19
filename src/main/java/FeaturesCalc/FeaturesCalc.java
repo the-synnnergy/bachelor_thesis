@@ -105,6 +105,7 @@ public class FeaturesCalc
         for (Similarities sim : Similarities.values())
         {
             int i = sim.ordinal();
+            // # TODO prequery only once and not for every
             data[i] = get_IndexInstanceData(query_reader[i], target_reader[i], null);
         }
         // Assert all indices have the same length

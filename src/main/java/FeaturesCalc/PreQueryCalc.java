@@ -111,7 +111,7 @@ public class PreQueryCalc
     // tf-idf term vectors
     private final Map<String, Double[]> document_term_vectors = new HashMap<>();
     // map for coherence score
-    private HashMap<Integer,HashMap<Integer,Float>>  cos_sims = new HashMap<>();
+    private final HashMap<Integer,HashMap<Integer,Float>>  cos_sims;
     private final Analyzer anal;
 
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
@@ -178,6 +178,7 @@ public class PreQueryCalc
                 document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue()) * idf_map.get(entry.getKey());
             }
         }
+        this.cos_sims = precalcQueries();
         System.out.println("it took:" + (System.currentTimeMillis() -time));
     }
 
@@ -293,30 +294,30 @@ public class PreQueryCalc
         // #TODO refactor this to filter tokens out first...
         long time = System.currentTimeMillis();
         features.idf_features = get_idf_features(tokens);
-        System.out.println("idf:"+(System.currentTimeMillis()-time));
+        //System.out.println("idf:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.ictf_features = get_ictf_features(tokens);
-        System.out.println("ictf:"+(System.currentTimeMillis()-time));
+        //System.out.println("ictf:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.entropy_features = get_entropy_features(tokens);
-        System.out.println("entropy:"+(System.currentTimeMillis()-time));
+        //System.out.println("entropy:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.var_features = get_var_features(tokens);
-        System.out.println("var_features:"+(System.currentTimeMillis()-time));
+        //System.out.println("var_features:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.scq_features = get_scq_features(tokens);
-        System.out.println("scq:"+(System.currentTimeMillis()-time));
+        //System.out.println("scq:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.query_scope = get_query_scope(tokens);
-        System.out.println("query_scope:"+(System.currentTimeMillis()-time));
+        //System.out.println("query_scope:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.simplified_clarity_score = get_sclarity_score(tokens);
-        System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));
+        //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
-        features.pmi_features = get_pmi_features(tokens);
-        System.out.println("pmi:"+(System.currentTimeMillis()-time));
+        //features.pmi_features = get_pmi_features(tokens);
+        //System.out.println("pmi:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
-        features.coherence_score = get_coherence_score(tokens);
+        features.coherence_score = better_coherence_score(tokens);
         System.out.println("coherence_score:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         return features;
@@ -635,21 +636,27 @@ public class PreQueryCalc
      * @param tokens
      * @return
      */
-    private double better_coherence_score(List<String> tokens)
+    private double better_coherence_score(List<String> tokens) throws IOException
     {
         double coherence_score = 0;
-        int[] docs = null;
+        IndexSearcher searcher = new IndexSearcher(reader);
         for(String token : tokens)
         {
-            for (int i = 0; i < docs.length; i++)
+            // get documents containing query token
+            TermQuery tq = new TermQuery(new Term("body",token));
+            // apache lucene giving error when set to Integer.MAX_VALUE, thus its set to 2147483630
+            TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(),reader.numDocs());
+            searcher.search(tq,collector);
+            ScoreDoc[] scoreDocs = collector.topDocs().scoreDocs;
+            for (int i = 0; i < scoreDocs.length; i++)
             {
-                int doc_id = docs[i];
-                for (int j = i + 1; j <docs.length; j++)
+                int doc_id = scoreDocs[i].doc;
+                for (int j = i + 1; j <scoreDocs.length; j++)
                 {
-                    coherence_score += cos_sims.get(doc_id).getOrDefault(docs[j],0.0f);
+                    coherence_score += cos_sims.get(doc_id).getOrDefault(scoreDocs[j].doc,0.0f);
                 }
             }
-            coherence_score = coherence_score/((double)(docs.length * (docs.length-1)));
+            coherence_score = coherence_score/((double)(scoreDocs.length * (scoreDocs.length-1)));
         }
 
 
@@ -660,9 +667,10 @@ public class PreQueryCalc
     {
         IndexSearcher searcher = new IndexSearcher(this.reader);
         HashMap<Integer,HashMap<Integer,Float>>  cos_sims = new HashMap<>();
+        BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         for(int i = 0;i <reader.numDocs();i++)
         {
-            TopScoreDocCollector collector = TopScoreDocCollector.create(Integer.MAX_VALUE,Integer.MAX_VALUE);
+            TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(), reader.numDocs());
             QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
             Query q = qb.createBooleanQuery("body",reader.document(i).getField("body").stringValue());
             searcher.search(q,collector);
