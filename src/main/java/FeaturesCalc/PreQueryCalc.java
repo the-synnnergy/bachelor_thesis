@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.math3.stat.StatUtils.populationVariance;
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
@@ -48,9 +49,7 @@ public class PreQueryCalc
         double simplified_clarity_score;
         double coherence_score;
 
-        public PrequeryFeatures()
-        {
-        }
+
 
         @Override
         public String toString()
@@ -112,6 +111,8 @@ public class PreQueryCalc
     private final Map<String, Double[]> document_term_vectors = new HashMap<>();
     // map for coherence score
     private final HashMap<Integer,HashMap<Integer,Float>>  cos_sims;
+    // IDs of documents containing a given term
+    private HashMap<String,List<Integer>> docIds_containing_term;
     private final Analyzer anal;
 
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
@@ -643,6 +644,7 @@ public class PreQueryCalc
         for(String token : tokens)
         {
             // get documents containing query token
+            // # TODO do this in get_prequery_features!!!! the queries need to be done in constructor and then saved to a map!
             TermQuery tq = new TermQuery(new Term("body",token));
             // apache lucene giving error when set to Integer.MAX_VALUE, thus its set to 2147483630
             TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(),reader.numDocs());
@@ -684,6 +686,22 @@ public class PreQueryCalc
         }
         return cos_sims;
 
+    }
+
+
+    private double[] better_pmi_score(List<String> tokens)
+    {
+        for(int i = 0; i < tokens.size();i++)
+        {
+            List<Integer> term_a = docIds_containing_term.get(tokens.get(i));
+            for(int j = i+1;j<tokens.size();j++)
+            {
+                List<Integer> term_b = docIds_containing_term.get(tokens.get(j));
+                Set<Integer> res;
+
+            }
+        }
+        return null;
     }
 
 }
