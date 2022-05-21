@@ -85,4 +85,24 @@ public class InstanceData
     public String getIdentifierTarget(){
         return this.identifier_target;
     }
+
+    public Double[] getAttributeValues()
+    {
+        List<Double> attributes = new ArrayList<>();
+        for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+        {
+            attributes.add(sim_scores_query[sim.ordinal()]);
+        }
+        for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+        {
+            attributes.add(sim_scores_target[sim.ordinal()]);
+        }
+
+
+    }
+
+    public String[] attributesNames()
+    {
+        return null;
+    }
 }

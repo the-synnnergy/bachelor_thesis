@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import static IndexTools.IndexCreator.createIndices;
 import static Parser.iTrustParser.get_NameFileMap;
+import static Parser.iTrustParser.get_true_req_to_source_links;
 import FeaturesCalc.InstanceData;
 import static FeaturesCalc.FeaturesCalc.get_full_dataset;
 
@@ -43,10 +44,21 @@ public class xml_test
         System.out.println("begin calculating features");
         List<InstanceData> data = get_full_dataset(req_readers,java_readers,null);
         System.out.println("Test");
-        /*for(InstanceData instanceData : data)
+
+        Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/iTrust/","/home/marcel/Downloads/iTrust/answer_req_code.xml");
+        for(InstanceData instanceData : data)
         {
-            System.out.println(instanceData.toString());
-        }*/
-        //Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/iTrust/","/home/marcel/Downloads/iTrust/answer_req_code.xml");
+
+        }
+    }
+
+    // #TODO move this to right package!
+    private static void create_csv_dataset(List<InstanceData> data, Map<String,List<String>> links, String path)
+    {
+
+        for(InstanceData instanceData : data)
+        {
+            String arr[] = instanceData.toStringArr();
+        }
     }
 }
