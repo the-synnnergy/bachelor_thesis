@@ -71,7 +71,7 @@ public class PostQueryCalc
         public static List<Attribute> getWekaAttributes()
         {
             List<Attribute> attributes = new ArrayList<>();
-            for(FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+            for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
             {
                 attributes.add(new Attribute("subquery_overlap_"+"query_"+sim.ordinal()));
                 attributes.add(new Attribute("robustness_score_"+"query_"+sim.ordinal()));
@@ -81,7 +81,7 @@ public class PostQueryCalc
                 attributes.add(new Attribute("weighted_information_gain_"+"query_"+sim.ordinal()));
                 attributes.add(new Attribute("normalized_query_commitment_"+"query_"+sim.ordinal()));
             }
-            for(FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+            for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
             {
                 attributes.add(new Attribute("subquery_overlap_"+"target_"+sim.ordinal()));
                 attributes.add(new Attribute("robustness_score_"+"target_"+sim.ordinal()));

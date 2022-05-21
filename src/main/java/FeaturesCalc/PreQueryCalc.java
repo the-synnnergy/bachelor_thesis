@@ -52,7 +52,7 @@ public class PreQueryCalc
         public static List<Attribute> getWekaAttributes()
         {
             List<Attribute> attributes = new ArrayList<>();
-            String[] identifiers = new String[]{"query_", "target_"};
+            String[] identifiers = new String[]{"query", "target"};
             for (String identifier : identifiers)
             {
                 attributes.add(new Attribute("idf_features_avg_" + identifier));
