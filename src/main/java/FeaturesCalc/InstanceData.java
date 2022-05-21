@@ -92,11 +92,12 @@ public class InstanceData
 
    public Instance getUnlabeledWekaInstance()
    {
+       // do this with Instance(double[] data)
        // 2 is for the two PreQuery features!
        int numAttributes = 2+sim_scores_query.length+sim_scores_target.length+postq_features_target.length+postq_features_query.length;
        Instance instance = new DenseInstance(numAttributes);
 
-
+        return null;
    }
 
    public static List<Attribute> attributesAsList()
@@ -113,6 +114,6 @@ public class InstanceData
        AttributesList.addAll(PreQueryCalc.PrequeryFeatures.getWekaAttributes());
        AttributesList.addAll(PostQueryCalc.PostQueryFeatures.getWekaAttributes());
 
-
+       return AttributesList;
    }
 }

@@ -17,7 +17,6 @@ import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.QueryBuilder;
-import org.w3c.dom.Attr;
 import weka.core.Attribute;
 
 import java.io.IOException;
@@ -53,7 +52,31 @@ public class PreQueryCalc
         public static List<Attribute> getWekaAttributes()
         {
             List<Attribute> attributes = new ArrayList<>();
+            String[] identifiers = new String[]{"query_", "target_"};
+            for (String identifier : identifiers)
+            {
+                attributes.add(new Attribute("idf_features_avg_" + identifier));
+                attributes.add(new Attribute("idf_features_max" + identifier));
+                attributes.add(new Attribute("idf_features_dev_" + identifier));
+                attributes.add(new Attribute("ictf_features_avg_" + identifier));
+                attributes.add(new Attribute("ictf_features_max_" + identifier));
+                attributes.add(new Attribute("ictf_features_dev_" + identifier));
+                attributes.add(new Attribute("entropy_features_avg_" + identifier));
+                attributes.add(new Attribute("entropy_features_max_" + identifier));
+                attributes.add(new Attribute("entropy_features_dev_" + identifier));
+                attributes.add(new Attribute("var_features_avg_" + identifier));
+                attributes.add(new Attribute("var_features_dev_" + identifier));
+                attributes.add(new Attribute("scq_features_avg_" + identifier));
+                attributes.add(new Attribute("scq_features_max_" + identifier));
+                attributes.add(new Attribute("scq_features_dev_" + identifier));
+                attributes.add(new Attribute("pmi_features_avg_" + identifier));
+                attributes.add(new Attribute("pmi_features_max_" + identifier));
+                attributes.add(new Attribute("query_scope_" + identifier));
+                attributes.add(new Attribute("simplified_sclarity_score_" + identifier));
+                attributes.add(new Attribute("coherence_score_" + identifier));
+            }
 
+            return attributes;
         }
 
 
@@ -67,9 +90,9 @@ public class PreQueryCalc
         {
             ArrayList<Pair<String, Double>> arr_list = new ArrayList<>();
             arr_list.addAll(arr_features_to_arr_list(name));
-            arr_list.add(new ImmutablePair<>(name+"query_scope",query_scope));
-            arr_list.add(new ImmutablePair<>(name+"simplified_clarity_score",simplified_clarity_score));
-            arr_list.add(new ImmutablePair<>(name+"coherence_score",coherence_score));
+            arr_list.add(new ImmutablePair<>(name + "query_scope", query_scope));
+            arr_list.add(new ImmutablePair<>(name + "simplified_clarity_score", simplified_clarity_score));
+            arr_list.add(new ImmutablePair<>(name + "coherence_score", coherence_score));
             return arr_list;
         }
 
@@ -77,23 +100,23 @@ public class PreQueryCalc
         private ArrayList<Pair<String, Double>> arr_features_to_arr_list(String name)
         {
             ArrayList<Pair<String, Double>> arr_list = new ArrayList<>();
-            arr_list.add(new ImmutablePair<>(name+"idf_features_avg", idf_features[0]));
-            arr_list.add(new ImmutablePair<>(name+"idf_features_max", idf_features[1]));
-            arr_list.add(new ImmutablePair<>(name+"idf_features_dev", idf_features[2]));
-            arr_list.add(new ImmutablePair<>(name+"ictf_features_avg", ictf_features[0]));
-            arr_list.add(new ImmutablePair<>(name+"ictf_features_max", ictf_features[1]));
-            arr_list.add(new ImmutablePair<>(name+"ictf_features_dev", ictf_features[2]));
-            arr_list.add(new ImmutablePair<>(name+"entropy_features_avg", entropy_features[0]));
-            arr_list.add(new ImmutablePair<>(name+"entropy_features_max", entropy_features[1]));
-            arr_list.add(new ImmutablePair<>(name+"entropy_features_dev", entropy_features[2]));
-            arr_list.add(new ImmutablePair<>(name+"var_features_avg", var_features[0]));
-            arr_list.add(new ImmutablePair<>(name+"var_features_max", var_features[1]));
-            arr_list.add(new ImmutablePair<>(name+"var_features_dev", var_features[2]));
-            arr_list.add(new ImmutablePair<>(name+"scq_features_avg", scq_features[0]));
-            arr_list.add(new ImmutablePair<>(name+"scq_features_max", scq_features[1]));
-            arr_list.add(new ImmutablePair<>(name+"scq_features_dev", scq_features[2]));
-            arr_list.add(new ImmutablePair<>(name+"pmi_features_avg", pmi_features[0]));
-            arr_list.add(new ImmutablePair<>(name+"pmi_features_max", pmi_features[1]));
+            arr_list.add(new ImmutablePair<>(name + "idf_features_avg", idf_features[0]));
+            arr_list.add(new ImmutablePair<>(name + "idf_features_max", idf_features[1]));
+            arr_list.add(new ImmutablePair<>(name + "idf_features_dev", idf_features[2]));
+            arr_list.add(new ImmutablePair<>(name + "ictf_features_avg", ictf_features[0]));
+            arr_list.add(new ImmutablePair<>(name + "ictf_features_max", ictf_features[1]));
+            arr_list.add(new ImmutablePair<>(name + "ictf_features_dev", ictf_features[2]));
+            arr_list.add(new ImmutablePair<>(name + "entropy_features_avg", entropy_features[0]));
+            arr_list.add(new ImmutablePair<>(name + "entropy_features_max", entropy_features[1]));
+            arr_list.add(new ImmutablePair<>(name + "entropy_features_dev", entropy_features[2]));
+            arr_list.add(new ImmutablePair<>(name + "var_features_avg", var_features[0]));
+            arr_list.add(new ImmutablePair<>(name + "var_features_max", var_features[1]));
+            arr_list.add(new ImmutablePair<>(name + "var_features_dev", var_features[2]));
+            arr_list.add(new ImmutablePair<>(name + "scq_features_avg", scq_features[0]));
+            arr_list.add(new ImmutablePair<>(name + "scq_features_max", scq_features[1]));
+            arr_list.add(new ImmutablePair<>(name + "scq_features_dev", scq_features[2]));
+            arr_list.add(new ImmutablePair<>(name + "pmi_features_avg", pmi_features[0]));
+            arr_list.add(new ImmutablePair<>(name + "pmi_features_max", pmi_features[1]));
             return arr_list;
         }
     }
@@ -116,15 +139,15 @@ public class PreQueryCalc
     // tf-idf term vectors
     private final Map<String, Double[]> document_term_vectors = new HashMap<>();
     // map for coherence score
-    private final HashMap<Integer,HashMap<Integer,Float>>  cos_sims;
+    private final HashMap<Integer, HashMap<Integer, Float>> cos_sims;
     // IDs of documents containing a given term
-    private HashMap<String,List<Integer>> docIds_containing_term;
+    private HashMap<String, List<Integer>> docIds_containing_term;
     private final Analyzer anal;
 
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         System.out.println("Making PRequeryCalc");
-        long time  = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         this.reader = reader;
         collection_size = reader.getDocCount("body");
         total_tokens = reader.getSumTotalTermFreq("body");
@@ -187,24 +210,24 @@ public class PreQueryCalc
         }
         this.cos_sims = precalcQueries();
         this.docIds_containing_term = generateTermContainingMap();
-        System.out.println("it took:" + (System.currentTimeMillis() -time));
+        System.out.println("it took:" + (System.currentTimeMillis() - time));
     }
 
     private HashMap<String, List<Integer>> generateTermContainingMap() throws IOException
     {
-        HashMap<String,List<Integer>> docIdsContainingTerm = new HashMap<>();
+        HashMap<String, List<Integer>> docIdsContainingTerm = new HashMap<>();
         Terms allTerms = MultiTerms.getTerms(reader, "body");
         TermsEnum allTermsIt = allTerms.iterator();
         PostingsEnum postings = allTermsIt.postings(null);
-        while( allTermsIt.next() != null)
+        while (allTermsIt.next() != null)
         {
             String term = allTermsIt.term().utf8ToString();
             List<Integer> docsContainingCurrentTerm = new ArrayList<>();
-            while(postings.nextDoc() != NO_MORE_DOCS)
+            while (postings.nextDoc() != NO_MORE_DOCS)
             {
                 docsContainingCurrentTerm.add(postings.docID());
             }
-            docIdsContainingTerm.put(term,docsContainingCurrentTerm);
+            docIdsContainingTerm.put(term, docsContainingCurrentTerm);
         }
         return docIdsContainingTerm;
     }
@@ -342,7 +365,7 @@ public class PreQueryCalc
         //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));*/
         time = System.currentTimeMillis();
         features.pmi_features = better_pmi_score(tokens);
-        System.out.println("pmi:"+(System.currentTimeMillis()-time));
+        System.out.println("pmi:" + (System.currentTimeMillis() - time));
         /*time = System.currentTimeMillis();
         features.coherence_score = better_coherence_score(tokens);
         System.out.println("coherence_score:"+(System.currentTimeMillis()-time));
@@ -601,14 +624,14 @@ public class PreQueryCalc
                 double token_a_prob = topDocs1.scoreDocs.length / ((double) collection_size);
                 TopDocs topDocs2 = searcher.search(tq_b, Integer.MAX_VALUE);
                 double token_b_prob = topDocs2.scoreDocs.length / ((double) collection_size);
-                if(intersect_token_a_token_b == 0) continue;
+                if (intersect_token_a_token_b == 0) continue;
                 double tmp_pmi = Math.log(intersect_token_a_token_b / (token_a_prob * token_b_prob));
                 avg_pmi += tmp_pmi;
                 if (tmp_pmi > max_pmi) max_pmi = tmp_pmi;
             }
 
         }
-        avg_pmi = (2.0d/token_set.size()) * avg_pmi;
+        avg_pmi = (2.0d / token_set.size()) * avg_pmi;
         return new double[]{avg_pmi, max_pmi};
     }
 
@@ -643,7 +666,7 @@ public class PreQueryCalc
                     double norm_j = 0d;
                     for (int k = 0; k < vector_i.length; k++)
                     {
-                        if(vector_i[k] == 0 || vector_j[k] == 0) continue;
+                        if (vector_i[k] == 0 || vector_j[k] == 0) continue;
                         dot_product += vector_i[k] + vector_j[k];
                         norm_i += Math.pow(vector_i[k], 2);
                         norm_j += Math.pow(vector_j[k], 2);
@@ -660,6 +683,7 @@ public class PreQueryCalc
 
     /**
      * #TODO needs to use stripped tokens
+     *
      * @param tokens
      * @return
      */
@@ -667,48 +691,48 @@ public class PreQueryCalc
     {
         double coherence_score = 0;
         IndexSearcher searcher = new IndexSearcher(reader);
-        for(String token : tokens)
+        for (String token : tokens)
         {
             // get documents containing query token
             // # TODO do this in get_prequery_features!!!! the queries need to be done in constructor and then saved to a map!
-            TermQuery tq = new TermQuery(new Term("body",token));
+            TermQuery tq = new TermQuery(new Term("body", token));
             // apache lucene giving error when set to Integer.MAX_VALUE, thus its set to 2147483630
-            TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(),reader.numDocs());
-            searcher.search(tq,collector);
+            TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(), reader.numDocs());
+            searcher.search(tq, collector);
             ScoreDoc[] scoreDocs = collector.topDocs().scoreDocs;
             for (int i = 0; i < scoreDocs.length; i++)
             {
                 int doc_id = scoreDocs[i].doc;
-                for (int j = i + 1; j <scoreDocs.length; j++)
+                for (int j = i + 1; j < scoreDocs.length; j++)
                 {
-                    coherence_score += cos_sims.get(doc_id).getOrDefault(scoreDocs[j].doc,0.0f);
+                    coherence_score += cos_sims.get(doc_id).getOrDefault(scoreDocs[j].doc, 0.0f);
                 }
             }
-            coherence_score = coherence_score/((double)(scoreDocs.length * (scoreDocs.length-1)));
+            coherence_score = coherence_score / ((double) (scoreDocs.length * (scoreDocs.length - 1)));
         }
 
 
-        return coherence_score/((double) tokens.size());
+        return coherence_score / ((double) tokens.size());
     }
 
-    private HashMap<Integer,HashMap<Integer,Float>> precalcQueries() throws IOException
+    private HashMap<Integer, HashMap<Integer, Float>> precalcQueries() throws IOException
     {
         IndexSearcher searcher = new IndexSearcher(this.reader);
-        HashMap<Integer,HashMap<Integer,Float>>  cos_sims = new HashMap<>();
+        HashMap<Integer, HashMap<Integer, Float>> cos_sims = new HashMap<>();
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
-        for(int i = 0;i <reader.numDocs();i++)
+        for (int i = 0; i < reader.numDocs(); i++)
         {
             TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(), reader.numDocs());
             QueryBuilder qb = new QueryBuilder(new EnglishAnalyzer());
-            Query q = qb.createBooleanQuery("body",reader.document(i).getField("body").stringValue());
-            searcher.search(q,collector);
+            Query q = qb.createBooleanQuery("body", reader.document(i).getField("body").stringValue());
+            searcher.search(q, collector);
             ScoreDoc[] scoreDocs = collector.topDocs().scoreDocs;
-            HashMap<Integer,Float> cos_sims_for_doc = new HashMap<>();
-            for(ScoreDoc scoreDoc : scoreDocs)
+            HashMap<Integer, Float> cos_sims_for_doc = new HashMap<>();
+            for (ScoreDoc scoreDoc : scoreDocs)
             {
-                cos_sims_for_doc.put(scoreDoc.doc,scoreDoc.score);
+                cos_sims_for_doc.put(scoreDoc.doc, scoreDoc.score);
             }
-            cos_sims.put(i,cos_sims_for_doc);
+            cos_sims.put(i, cos_sims_for_doc);
         }
         return cos_sims;
 
@@ -718,21 +742,21 @@ public class PreQueryCalc
     private double[] better_pmi_score(List<String> tokens)
     {
         double avg_pmi = 0.0d;
-        double max_pmi = - Double.MAX_VALUE;
-        for(int i = 0; i < tokens.size();i++)
+        double max_pmi = -Double.MAX_VALUE;
+        for (int i = 0; i < tokens.size(); i++)
         {
             List<Integer> term_a = docIds_containing_term.get(tokens.get(i));
-            for(int j = i+1;j<tokens.size();j++)
+            for (int j = i + 1; j < tokens.size(); j++)
             {
                 List<Integer> term_b = docIds_containing_term.get(tokens.get(j));
                 List<Integer> intersect = new ArrayList<>(term_b);
                 intersect.retainAll(term_a);
-                double tmpPmi = Math.log((intersect.size()* ((double)reader.numDocs())/((double) term_a.size() * term_b.size())));
-                max_pmi = Double.max(max_pmi,tmpPmi);
+                double tmpPmi = Math.log((intersect.size() * ((double) reader.numDocs()) / ((double) term_a.size() * term_b.size())));
+                max_pmi = Double.max(max_pmi, tmpPmi);
                 avg_pmi += tmpPmi;
             }
         }
-        return new double[]{avg_pmi,max_pmi};
+        return new double[]{avg_pmi, max_pmi};
     }
 
 }
