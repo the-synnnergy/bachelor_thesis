@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.apache.commons.math3.stat.StatUtils.populationVariance;
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
@@ -691,17 +690,22 @@ public class PreQueryCalc
 
     private double[] better_pmi_score(List<String> tokens)
     {
+        double avg_pmi = 0.0d;
+        double max_pmi = - Double.MAX_VALUE;
         for(int i = 0; i < tokens.size();i++)
         {
             List<Integer> term_a = docIds_containing_term.get(tokens.get(i));
             for(int j = i+1;j<tokens.size();j++)
             {
                 List<Integer> term_b = docIds_containing_term.get(tokens.get(j));
-                Set<Integer> res;
-
+                List<Integer> intersect = new ArrayList<>(term_b);
+                intersect.retainAll(term_a);
+                double tmpPmi = Math.log((intersect.size()* ((double)reader.numDocs())/((double) term_a.size() * term_b.size())));
+                max_pmi = Double.max(max_pmi,tmpPmi);
+                avg_pmi += tmpPmi;
             }
         }
-        return null;
+        return new double[]{avg_pmi,max_pmi};
     }
 
 }
