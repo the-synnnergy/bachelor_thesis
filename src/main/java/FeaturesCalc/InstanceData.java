@@ -2,6 +2,10 @@ package FeaturesCalc;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.w3c.dom.Attr;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,23 +90,29 @@ public class InstanceData
         return this.identifier_target;
     }
 
-    public Double[] getAttributeValues()
-    {
-        List<Double> attributes = new ArrayList<>();
-        for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+   public Instance getUnlabeledWekaInstance()
+   {
+       // 2 is for the two PreQuery features!
+       int numAttributes = 2+sim_scores_query.length+sim_scores_target.length+postq_features_target.length+postq_features_query.length;
+       Instance instance = new DenseInstance(numAttributes);
+
+
+   }
+
+   public static List<Attribute> attributesAsList()
+   {
+       List<Attribute> AttributesList = new ArrayList<>();
+        for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
         {
-            attributes.add(sim_scores_query[sim.ordinal()]);
+            AttributesList.add(new Attribute("sim_score_query_" + sim.ordinal()));
         }
-        for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            attributes.add(sim_scores_target[sim.ordinal()]);
-        }
+       for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+       {
+           AttributesList.add(new Attribute("sim_score_target_" + sim.ordinal()));
+       }
+       AttributesList.addAll(PreQueryCalc.PrequeryFeatures.getWekaAttributes());
+       AttributesList.addAll(PostQueryCalc.PostQueryFeatures.getWekaAttributes());
 
 
-    }
-
-    public String[] attributesNames()
-    {
-        return null;
-    }
+   }
 }

@@ -17,6 +17,8 @@ import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.QueryBuilder;
+import org.w3c.dom.Attr;
+import weka.core.Attribute;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,7 +38,7 @@ import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 public class PreQueryCalc
 {
 
-    public class PrequeryFeatures
+    public static class PrequeryFeatures
     {
         double[] idf_features;
         double[] ictf_features;
@@ -48,6 +50,11 @@ public class PreQueryCalc
         double simplified_clarity_score;
         double coherence_score;
 
+        public static List<Attribute> getWekaAttributes()
+        {
+            List<Attribute> attributes = new ArrayList<>();
+
+        }
 
 
         @Override

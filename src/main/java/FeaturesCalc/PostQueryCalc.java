@@ -11,6 +11,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.QueryBuilder;
+import weka.core.Attribute;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,7 +27,7 @@ public class PostQueryCalc
     /**
      * Class for storing the features, so they can be returned and then easily extracted.
      */
-    public class PostQueryFeatures
+    public static class PostQueryFeatures
     {
         double subquery_overlap;
         double robustness_score;
@@ -36,7 +37,7 @@ public class PostQueryCalc
         double weighted_information_gain;
         double normalized_query_commitment;
 
-        public PostQueryFeatures(){}
+        public PostQueryFeatures(){ /* TODO document why this constructor is empty */ }
 
         public void print()
         {
@@ -54,7 +55,7 @@ public class PostQueryCalc
          * @param name name prefix for feature
          * @return array list with tuples containing feature name with given prefix name and values
          */
-        public ArrayList<Pair<String,Double>> to_ArrayList_named(String name)
+        public List<Pair<String,Double>> to_ArrayList_named(String name)
         {
             ArrayList<Pair<String,Double>> arr_list = new ArrayList<>();
             arr_list.add(new ImmutablePair<>(name+"subquery_overlap",subquery_overlap));
@@ -66,6 +67,36 @@ public class PostQueryCalc
             arr_list.add(new ImmutablePair<>(name+"normalized_query_commitment",normalized_query_commitment));
             return arr_list;
         }
+
+        public static List<Attribute> getWekaAttributes()
+        {
+            List<Attribute> attributes = new ArrayList<>();
+            for(FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+            {
+                attributes.add(new Attribute("subquery_overlap_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("robustness_score_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("first_rank_change_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("clustering_tendency_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("spatial_autocorrelation_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("weighted_information_gain_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("normalized_query_commitment_"+"query_"+sim.ordinal()));
+            }
+            for(FeaturesCalc.FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+            {
+                attributes.add(new Attribute("subquery_overlap_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("robustness_score_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("first_rank_change_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("clustering_tendency_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("spatial_autocorrelation_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("weighted_information_gain_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("normalized_query_commitment_"+"target_"+sim.ordinal()));
+            }
+
+
+            return attributes;
+        }
+
+
     }
 
     IndexReader reader;
