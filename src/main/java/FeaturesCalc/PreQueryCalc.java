@@ -179,7 +179,27 @@ public class PreQueryCalc
             }
         }
         this.cos_sims = precalcQueries();
+        this.docIds_containing_term = generateTermContainingMap();
         System.out.println("it took:" + (System.currentTimeMillis() -time));
+    }
+
+    private HashMap<String, List<Integer>> generateTermContainingMap() throws IOException
+    {
+        HashMap<String,List<Integer>> docIdsContainingTerm = new HashMap<>();
+        Terms allTerms = MultiTerms.getTerms(reader, "body");
+        TermsEnum allTermsIt = allTerms.iterator();
+        PostingsEnum postings = allTermsIt.postings(null);
+        while( allTermsIt.next() != null)
+        {
+            String term = allTermsIt.term().utf8ToString();
+            List<Integer> docsContainingCurrentTerm = new ArrayList<>();
+            while(postings.nextDoc() != NO_MORE_DOCS)
+            {
+                docsContainingCurrentTerm.add(postings.docID());
+            }
+            docIdsContainingTerm.put(term,docsContainingCurrentTerm);
+        }
+        return docIdsContainingTerm;
     }
 
     public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException
@@ -294,7 +314,7 @@ public class PreQueryCalc
         // #TODO refactor this to filter tokens out first...
         long time = System.currentTimeMillis();
         features.idf_features = get_idf_features(tokens);
-        //System.out.println("idf:"+(System.currentTimeMillis()-time));
+        /*//System.out.println("idf:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.ictf_features = get_ictf_features(tokens);
         //System.out.println("ictf:"+(System.currentTimeMillis()-time));
@@ -312,14 +332,14 @@ public class PreQueryCalc
         //System.out.println("query_scope:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.simplified_clarity_score = get_sclarity_score(tokens);
-        //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));
+        //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));*/
         time = System.currentTimeMillis();
-        //features.pmi_features = get_pmi_features(tokens);
-        //System.out.println("pmi:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
+        features.pmi_features = better_pmi_score(tokens);
+        System.out.println("pmi:"+(System.currentTimeMillis()-time));
+        /*time = System.currentTimeMillis();
         features.coherence_score = better_coherence_score(tokens);
         System.out.println("coherence_score:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
+        time = System.currentTimeMillis();*/
         return features;
     }
 
