@@ -68,7 +68,7 @@ public class PostQueryCalc
             return arr_list;
         }
 
-        public static List<Attribute> getWekaAttributes()
+        public static List<Attribute> getWekaAttributesNames()
         {
             List<Attribute> attributes = new ArrayList<>();
             for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
@@ -94,6 +94,18 @@ public class PostQueryCalc
 
 
             return attributes;
+        }
+
+        public List<Double> getWekaAttributesValues()
+        {
+            List<Double> values = new ArrayList<>();
+            values.add(subquery_overlap);
+            values.add(robustness_score);
+            values.add(first_rank_change);
+            values.add(clustering_tendency);
+            values.add(spatial_autocorrelation);
+            values.add(weighted_information_gain);
+            values.add(normalized_query_commitment);
         }
 
 

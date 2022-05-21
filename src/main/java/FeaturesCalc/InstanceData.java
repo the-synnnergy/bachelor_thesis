@@ -2,9 +2,7 @@ package FeaturesCalc;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.w3c.dom.Attr;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instance;
 
 import java.util.ArrayList;
@@ -94,8 +92,23 @@ public class InstanceData
    {
        // do this with Instance(double[] data)
        // 2 is for the two PreQuery features!
-       int numAttributes = 2+sim_scores_query.length+sim_scores_target.length+postq_features_target.length+postq_features_query.length;
-       Instance instance = new DenseInstance(numAttributes);
+       List<Double> AttributeValues = new ArrayList<>();
+       for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+       {
+           AttributeValues.add(sim_scores_query[sim.ordinal()]);
+       }
+       for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+       {
+           AttributeValues.add(sim_scores_target[sim.ordinal()]);
+       }
+       // #TODO fix calculcating preq features only!
+       AttributeValues.addAll(preq_features_query);
+       AttributeValues.addAll(preq_features_target);
+       for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+       {
+           AttributeValues.addAll(postq_features_query[sim.ordinal()].getWekaAttributesValues());
+       }
+
 
         return null;
    }
@@ -111,8 +124,8 @@ public class InstanceData
        {
            AttributesList.add(new Attribute("sim_score_target_" + sim.ordinal()));
        }
-       AttributesList.addAll(PreQueryCalc.PrequeryFeatures.getWekaAttributes());
-       AttributesList.addAll(PostQueryCalc.PostQueryFeatures.getWekaAttributes());
+       AttributesList.addAll(PreQueryCalc.PrequeryFeatures.getWekaAttributesNames());
+       AttributesList.addAll(PostQueryCalc.PostQueryFeatures.getWekaAttributesNames());
 
        return AttributesList;
    }

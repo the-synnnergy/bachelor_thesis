@@ -49,7 +49,7 @@ public class PreQueryCalc
         double simplified_clarity_score;
         double coherence_score;
 
-        public static List<Attribute> getWekaAttributes()
+        public static List<Attribute> getWekaAttributesNames()
         {
             List<Attribute> attributes = new ArrayList<>();
             String[] identifiers = new String[]{"query", "target"};
@@ -77,6 +77,30 @@ public class PreQueryCalc
             }
 
             return attributes;
+        }
+
+        public List<Double> getWekaAttributesValues()
+        {
+            List<Double> values = new ArrayList<>();
+            addArrFeaturesToList(values, idf_features, ictf_features, entropy_features);
+            values.add(entropy_features[2]);
+            addArrFeaturesToList(values, var_features, scq_features, pmi_features);
+            values.add(query_scope);
+            values.add(simplified_clarity_score);
+            values.add(coherence_score);
+            return values;
+        }
+        // #TODO shitty solution by INtellij lol
+        private void addArrFeaturesToList(List<Double> values, double[] idf_features, double[] ictf_features, double[] entropy_features)
+        {
+            values.add(idf_features[0]);
+            values.add(idf_features[1]);
+            values.add(idf_features[2]);
+            values.add(ictf_features[0]);
+            values.add(ictf_features[1]);
+            values.add(ictf_features[2]);
+            values.add(entropy_features[0]);
+            values.add(entropy_features[1]);
         }
 
 
