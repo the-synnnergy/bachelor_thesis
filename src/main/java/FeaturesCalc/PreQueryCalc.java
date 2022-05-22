@@ -368,7 +368,7 @@ public class PreQueryCalc
         // #TODO refactor this to filter tokens out first...
         long time = System.currentTimeMillis();
         features.idf_features = get_idf_features(tokens);
-        /*//System.out.println("idf:"+(System.currentTimeMillis()-time));
+        //System.out.println("idf:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.ictf_features = get_ictf_features(tokens);
         //System.out.println("ictf:"+(System.currentTimeMillis()-time));
@@ -386,14 +386,14 @@ public class PreQueryCalc
         //System.out.println("query_scope:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.simplified_clarity_score = get_sclarity_score(tokens);
-        //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));*/
+        //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));
         time = System.currentTimeMillis();
         features.pmi_features = better_pmi_score(tokens);
         System.out.println("pmi:" + (System.currentTimeMillis() - time));
-        /*time = System.currentTimeMillis();
+        time = System.currentTimeMillis();
         features.coherence_score = better_coherence_score(tokens);
         System.out.println("coherence_score:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();*/
+        time = System.currentTimeMillis();
         return features;
     }
 
