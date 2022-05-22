@@ -21,9 +21,7 @@ class IndexFeatureData
 {
     // Maps for saving features calculation, prefix query saves results for queries from "query index" and target for "target index"
     Map<Integer, PostQueryCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
-    Map<Integer, PreQueryCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
     Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
-    Map<Integer, PreQueryCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
     Map<Integer, TopDocs> query_top_docs = new HashMap<>();
     Map<Integer, TopDocs> target_top_docs = new HashMap<>();
 
@@ -111,8 +109,11 @@ public class FeaturesCalc
         // Assert all indices have the same length
         List<InstanceData> instance_data = new ArrayList<>();
         // assert all readers have same length, better check here, if not throw exception!
+        PreQueryCalc preQueryCalcQuery = new PreQueryCalc(query_reader[0], new EnglishAnalyzer());
+        PreQueryCalc preQueryCalcTarget = new PreQueryCalc(target_reader[0],new EnglishAnalyzer());
         for (int i = 0; i < query_reader[0].numDocs(); i++)
         {
+            FeaturesCalc.PreQueryCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(),preQueryCalcTarget);
             for (int j = 0; j < target_reader[0].numDocs(); j++)
             {
                 InstanceData instance = new InstanceData();
@@ -121,10 +122,13 @@ public class FeaturesCalc
                     instance.sim_scores_query[sim.ordinal()] = data[sim.ordinal()].get_score_for_doc(i,j,true);
                     instance.sim_scores_target[sim.ordinal()] = data[sim.ordinal()].get_score_for_doc(i,j,false);
                     instance.postq_features_target[sim.ordinal()] = data[sim.ordinal()].target_postq_map.get(j);
-                    instance.preq_features_target[sim.ordinal()] = data[sim.ordinal()].target_preq_map.get(j);
-                    instance.postq_features_query[sim.ordinal()] = data[sim.ordinal()].query_postq_map.get(i);
-                    instance.preq_features_query[sim.ordinal()] = data[sim.ordinal()].query_preq_map.get(j);
+
+                    instance.postq_features_query[sim.ordinal()] = data[i].query_postq_map.get(i);
+
                 }
+
+                instance.preq_features_query = preqFeaturesQuery;
+                instance.preq_features_target = get_preq_features(target_reader[0].document(j).getField("body").stringValue(),preQueryCalcQuery);
                 instance.identifier_query = query_reader[0].document(i).getField("title").stringValue();
                 instance.identifier_target = target_reader[0].document(j).getField("title").stringValue();
                 instance_data.add(instance);
@@ -132,6 +136,12 @@ public class FeaturesCalc
         }
         return instance_data;
     }
+
+    public static FeaturesCalc.PreQueryCalc.PrequeryFeatures get_preq_features(String query, PreQueryCalc preQueryCalc) throws IOException
+    {
+        return preQueryCalc.get_prequery_features(query);
+    }
+
 
     public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, String stopwords) throws IOException
     {
@@ -142,31 +152,25 @@ public class FeaturesCalc
         Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
         Map<Integer, PreQueryCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
 
-        PreQueryCalc pre_calc_query = new PreQueryCalc(query_reader, new EnglishAnalyzer());
-        PreQueryCalc pre_calc_target = new PreQueryCalc(target_reader, new EnglishAnalyzer());
         PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, new EnglishAnalyzer());
         PostQueryCalc post_calc_target = new PostQueryCalc(query_reader, new EnglishAnalyzer());
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();
-            //query_postq_map.put(i, post_calc_query.get_PostQueryFeatures(query));
-            query_preq_map.put(i, pre_calc_query.get_prequery_features(query));
+            query_postq_map.put(i, post_calc_query.get_PostQueryFeatures(query));
         }
         for (int i = 0; i < target_reader.numDocs(); i++)
         {
             String query = target_reader.document(i).getField("body").stringValue();
-            //target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
-            target_preq_map.put(i, pre_calc_target.get_prequery_features(query));
+            target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
         }
         get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs);
         get_top_docs_to_map(target_reader, query_reader, new EnglishAnalyzer(), target_top_docs);
         IndexFeatureData data = new IndexFeatureData();
         data.query_postq_map = query_postq_map;
-        data.query_preq_map = query_preq_map;
         data.query_top_docs = query_top_docs;
         data.target_top_docs = target_top_docs;
         data.target_postq_map = target_postq_map;
-        data.target_preq_map = target_preq_map;
         return data;
     }
 

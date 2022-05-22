@@ -14,9 +14,9 @@ public class InstanceData
     double[] sim_scores_query = new double[FeaturesCalc.Similarities.values().length];
     double[] sim_scores_target = new double[FeaturesCalc.Similarities.values().length];
     PostQueryCalc.PostQueryFeatures[] postq_features_query = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
-    PreQueryCalc.PrequeryFeatures[] preq_features_query = new PreQueryCalc.PrequeryFeatures[FeaturesCalc.Similarities.values().length];
+    PreQueryCalc.PrequeryFeatures preq_features_query;
     PostQueryCalc.PostQueryFeatures[] postq_features_target = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
-    PreQueryCalc.PrequeryFeatures[] preq_features_target = new PreQueryCalc.PrequeryFeatures[FeaturesCalc.Similarities.values().length];
+    PreQueryCalc.PrequeryFeatures preq_features_target;
     String identifier_query;
     String identifier_target;
 
@@ -37,14 +37,7 @@ public class InstanceData
             String name = sim.name() + "_target_score";
             features.add(new ImmutablePair<>(name, sim_scores_target[sim.ordinal()]));
         }
-        for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            for (PreQueryCalc.PrequeryFeatures preq_feature : preq_features_query)
-            {
-                String name = sim.name() + "_query_preq_";
-                features.addAll(preq_feature.to_ArrayList_named(name));
-            }
-        }
+
         for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
         {
             for (PostQueryCalc.PostQueryFeatures postq_feature : postq_features_query)
@@ -53,14 +46,7 @@ public class InstanceData
                 features.addAll(postq_feature.to_ArrayList_named(name));
             }
         }
-        for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
-        {
-            for (PreQueryCalc.PrequeryFeatures preq_feature : preq_features_target)
-            {
-                String name = sim.name() + "_target_preq_";
-                features.addAll(preq_feature.to_ArrayList_named(name));
-            }
-        }
+
         for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
         {
             for (PostQueryCalc.PostQueryFeatures postq_feature : postq_features_target)
@@ -102,8 +88,8 @@ public class InstanceData
            AttributeValues.add(sim_scores_target[sim.ordinal()]);
        }
        // #TODO fix calculcating preq features only!
-       AttributeValues.addAll(preq_features_query);
-       AttributeValues.addAll(preq_features_target);
+       AttributeValues.addAll(preq_features_query.getWekaAttributesValues());
+       AttributeValues.addAll(preq_features_target.getWekaAttributesValues());
        for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
        {
            AttributeValues.addAll(postq_features_query[sim.ordinal()].getWekaAttributesValues());

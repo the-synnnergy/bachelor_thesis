@@ -37,7 +37,8 @@ public class PostQueryCalc
         double weighted_information_gain;
         double normalized_query_commitment;
 
-        public PostQueryFeatures(){ /* TODO document why this constructor is empty */ }
+        public PostQueryFeatures()
+        { /* TODO document why this constructor is empty */ }
 
         public void print()
         {
@@ -52,44 +53,45 @@ public class PostQueryCalc
 
         /**
          * Return array list with tuples containing feature name and value
+         *
          * @param name name prefix for feature
          * @return array list with tuples containing feature name with given prefix name and values
          */
-        public List<Pair<String,Double>> to_ArrayList_named(String name)
+        public List<Pair<String, Double>> to_ArrayList_named(String name)
         {
-            ArrayList<Pair<String,Double>> arr_list = new ArrayList<>();
-            arr_list.add(new ImmutablePair<>(name+"subquery_overlap",subquery_overlap));
-            arr_list.add(new ImmutablePair<>(name+"robustness_score",robustness_score));
-            arr_list.add(new ImmutablePair<>(name+"first_rank_change",first_rank_change));
-            arr_list.add(new ImmutablePair<>(name+"clustering_tendency",clustering_tendency));
-            arr_list.add(new ImmutablePair<>(name+"spatial_autocorrelation",spatial_autocorrelation));
-            arr_list.add(new ImmutablePair<>(name+"weighted_information_gain",weighted_information_gain));
-            arr_list.add(new ImmutablePair<>(name+"normalized_query_commitment",normalized_query_commitment));
+            ArrayList<Pair<String, Double>> arr_list = new ArrayList<>();
+            arr_list.add(new ImmutablePair<>(name + "subquery_overlap", subquery_overlap));
+            arr_list.add(new ImmutablePair<>(name + "robustness_score", robustness_score));
+            arr_list.add(new ImmutablePair<>(name + "first_rank_change", first_rank_change));
+            arr_list.add(new ImmutablePair<>(name + "clustering_tendency", clustering_tendency));
+            arr_list.add(new ImmutablePair<>(name + "spatial_autocorrelation", spatial_autocorrelation));
+            arr_list.add(new ImmutablePair<>(name + "weighted_information_gain", weighted_information_gain));
+            arr_list.add(new ImmutablePair<>(name + "normalized_query_commitment", normalized_query_commitment));
             return arr_list;
         }
 
         public static List<Attribute> getWekaAttributesNames()
         {
             List<Attribute> attributes = new ArrayList<>();
-            for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+            for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
             {
-                attributes.add(new Attribute("subquery_overlap_"+"query_"+sim.ordinal()));
-                attributes.add(new Attribute("robustness_score_"+"query_"+sim.ordinal()));
-                attributes.add(new Attribute("first_rank_change_"+"query_"+sim.ordinal()));
-                attributes.add(new Attribute("clustering_tendency_"+"query_"+sim.ordinal()));
-                attributes.add(new Attribute("spatial_autocorrelation_"+"query_"+sim.ordinal()));
-                attributes.add(new Attribute("weighted_information_gain_"+"query_"+sim.ordinal()));
-                attributes.add(new Attribute("normalized_query_commitment_"+"query_"+sim.ordinal()));
+                attributes.add(new Attribute("subquery_overlap_" + "query_" + sim.ordinal()));
+                attributes.add(new Attribute("robustness_score_" + "query_" + sim.ordinal()));
+                attributes.add(new Attribute("first_rank_change_" + "query_" + sim.ordinal()));
+                attributes.add(new Attribute("clustering_tendency_" + "query_" + sim.ordinal()));
+                attributes.add(new Attribute("spatial_autocorrelation_" + "query_" + sim.ordinal()));
+                attributes.add(new Attribute("weighted_information_gain_" + "query_" + sim.ordinal()));
+                attributes.add(new Attribute("normalized_query_commitment_" + "query_" + sim.ordinal()));
             }
-            for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
+            for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
             {
-                attributes.add(new Attribute("subquery_overlap_"+"target_"+sim.ordinal()));
-                attributes.add(new Attribute("robustness_score_"+"target_"+sim.ordinal()));
-                attributes.add(new Attribute("first_rank_change_"+"target_"+sim.ordinal()));
-                attributes.add(new Attribute("clustering_tendency_"+"target_"+sim.ordinal()));
-                attributes.add(new Attribute("spatial_autocorrelation_"+"target_"+sim.ordinal()));
-                attributes.add(new Attribute("weighted_information_gain_"+"target_"+sim.ordinal()));
-                attributes.add(new Attribute("normalized_query_commitment_"+"target_"+sim.ordinal()));
+                attributes.add(new Attribute("subquery_overlap_" + "target_" + sim.ordinal()));
+                attributes.add(new Attribute("robustness_score_" + "target_" + sim.ordinal()));
+                attributes.add(new Attribute("first_rank_change_" + "target_" + sim.ordinal()));
+                attributes.add(new Attribute("clustering_tendency_" + "target_" + sim.ordinal()));
+                attributes.add(new Attribute("spatial_autocorrelation_" + "target_" + sim.ordinal()));
+                attributes.add(new Attribute("weighted_information_gain_" + "target_" + sim.ordinal()));
+                attributes.add(new Attribute("normalized_query_commitment_" + "target_" + sim.ordinal()));
             }
 
 
@@ -106,6 +108,7 @@ public class PostQueryCalc
             values.add(spatial_autocorrelation);
             values.add(weighted_information_gain);
             values.add(normalized_query_commitment);
+            return values;
         }
 
 
@@ -126,10 +129,10 @@ public class PostQueryCalc
      * @param anal Analyzer which should be used for Stemming and stopword removal, must be the same(language, stopwords, stemming rules) as used in Index!
      * @throws IOException -
      */
-    public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException,IllegalArgumentException
+    public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException, IllegalArgumentException
     {
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
-        if(reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
+        if (reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
         this.reader = reader;
         document_to_termvectors = Util.get_idf_document_vectors(reader);
         this.anal = anal;
@@ -173,7 +176,8 @@ public class PostQueryCalc
 
     /**
      * Method to calculated subquery overlap
-     * @param query String which is to be queried and for which subquery overlap is calculated, preprocessed with analyzer
+     *
+     * @param query    String which is to be queried and for which subquery overlap is calculated, preprocessed with analyzer
      * @param searcher IndexSearcher on the given IndexReader in the constructor
      * @return subquery overlap as double
      * @throws IOException -
@@ -205,8 +209,9 @@ public class PostQueryCalc
     }
 
     /**
-     *  Calculates the robustness score for given query
-     * @param query String which is to be queried and for which robustness score is calculated, preprocessed with analyzer
+     * Calculates the robustness score for given query
+     *
+     * @param query    String which is to be queried and for which robustness score is calculated, preprocessed with analyzer
      * @param searcher IndexSearcher on the given IndexReader in the constructor
      * @return robustness score as double
      * @throws IOException
@@ -283,7 +288,8 @@ public class PostQueryCalc
 
     /**
      * Calculates the clustering tendency for a given query
-     * @param query String for which clustering tendency is calculated, needs to be preprocessed
+     *
+     * @param query    String for which clustering tendency is calculated, needs to be preprocessed
      * @param searcher IndexSearcher on IndexReader used in Constructor
      * @return Clustering tendency as double
      * @throws IOException
@@ -336,12 +342,13 @@ public class PostQueryCalc
 
     /**
      * Submethod for calculating the Sim_query from Mill paper which is needed for Clustering Tendency
+     *
      * @param sampleable_points Document ids which are not in the top 100 results from query
-     * @param searcher IndexSearcher on IndexReader used in Constructor
-     * @param doc_ids Top100 query document ids
-     * @param top100 TopDocs result from query
-     * @param term_vectors idf vectors for index
-     * @param query query string
+     * @param searcher          IndexSearcher on IndexReader used in Constructor
+     * @param doc_ids           Top100 query document ids
+     * @param top100            TopDocs result from query
+     * @param term_vectors      idf vectors for index
+     * @param query             query string
      * @return sim query for one samples point
      * @throws IOException
      */
@@ -370,11 +377,11 @@ public class PostQueryCalc
                 break;
             }
         }
-        final int found_docs_query = top100.scoreDocs.length-1;
+        final int found_docs_query = top100.scoreDocs.length - 1;
         int nearest_neighbor = 0;
-        if(marked_point_index == 0) nearest_neighbor = 1;
-        if(marked_point_index == top100.scoreDocs.length -1) nearest_neighbor = marked_point_index -1;
-        if(marked_point_index != 0 && marked_point_index != top100.scoreDocs.length-1)
+        if (marked_point_index == 0) nearest_neighbor = 1;
+        if (marked_point_index == top100.scoreDocs.length - 1) nearest_neighbor = marked_point_index - 1;
+        if (marked_point_index != 0 && marked_point_index != top100.scoreDocs.length - 1)
         {
             if (top100.scoreDocs[marked_point_index - 1].score > (top100.scoreDocs[marked_point_index + 1].score))
             {
@@ -397,7 +404,6 @@ public class PostQueryCalc
     }
 
     /**
-     *
      * @param first
      * @param second
      * @param query_termvector
@@ -436,7 +442,8 @@ public class PostQueryCalc
 
     /**
      * Method to calculated spatial autocorrelation for given query
-     * @param query String for which the spatial autocorrelation is calculated
+     *
+     * @param query    String for which the spatial autocorrelation is calculated
      * @param searcher IndexSearcher on IndexReader used in constructor
      * @return spatial autocorrelation as double
      * @throws IOException
@@ -478,8 +485,10 @@ public class PostQueryCalc
     }
 
 
-    /** Calculated the weighted information for given query string
-     * @param query String for which weighted information is calculated
+    /**
+     * Calculated the weighted information for given query string
+     *
+     * @param query    String for which weighted information is calculated
      * @param searcher
      * @return
      */
@@ -503,9 +512,9 @@ public class PostQueryCalc
             for (String term : query_terms)
             {
                 // #TODO fix this to a rational default !
-                if(corpus_probs.getOrDefault(term,0.0d) == 0.0d) continue;
-                if(term_probabilities_document.getOrDefault(term,0.0d) == 0.0d) continue;
-                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 1.0d) / corpus_probs.getOrDefault(term,1.0d));
+                if (corpus_probs.getOrDefault(term, 0.0d) == 0.0d) continue;
+                if (term_probabilities_document.getOrDefault(term, 0.0d) == 0.0d) continue;
+                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 1.0d) / corpus_probs.getOrDefault(term, 1.0d));
             }
         }
         return weighted_information_gain / top_hits.scoreDocs.length;
