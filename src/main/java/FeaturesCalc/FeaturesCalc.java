@@ -113,7 +113,7 @@ public class FeaturesCalc
         PreQueryCalc preQueryCalcTarget = new PreQueryCalc(target_reader[0],new EnglishAnalyzer());
         for (int i = 0; i < query_reader[0].numDocs(); i++)
         {
-            FeaturesCalc.PreQueryCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(),preQueryCalcTarget);
+            PreQueryCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(),preQueryCalcTarget);
             for (int j = 0; j < target_reader[0].numDocs(); j++)
             {
                 InstanceData instance = new InstanceData();
@@ -122,8 +122,7 @@ public class FeaturesCalc
                     instance.sim_scores_query[sim.ordinal()] = data[sim.ordinal()].get_score_for_doc(i,j,true);
                     instance.sim_scores_target[sim.ordinal()] = data[sim.ordinal()].get_score_for_doc(i,j,false);
                     instance.postq_features_target[sim.ordinal()] = data[sim.ordinal()].target_postq_map.get(j);
-
-                    instance.postq_features_query[sim.ordinal()] = data[i].query_postq_map.get(i);
+                    instance.postq_features_query[sim.ordinal()] = data[sim.ordinal()].query_postq_map.get(i);
 
                 }
 
@@ -137,7 +136,7 @@ public class FeaturesCalc
         return instance_data;
     }
 
-    public static FeaturesCalc.PreQueryCalc.PrequeryFeatures get_preq_features(String query, PreQueryCalc preQueryCalc) throws IOException
+    public static PreQueryCalc.PrequeryFeatures get_preq_features(String query, PreQueryCalc preQueryCalc) throws IOException
     {
         return preQueryCalc.get_prequery_features(query);
     }

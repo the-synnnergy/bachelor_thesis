@@ -3,6 +3,7 @@ package FeaturesCalc;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.Instance;
 
 import java.util.ArrayList;
@@ -95,8 +96,9 @@ public class InstanceData
            AttributeValues.addAll(postq_features_query[sim.ordinal()].getWekaAttributesValues());
        }
 
-
-        return null;
+        DenseInstance instance = new DenseInstance(AttributeValues.size());
+        instance = (DenseInstance) instance.copy(AttributeValues.stream().mapToDouble(Double::doubleValue).toArray());
+        return instance;
    }
 
    public static List<Attribute> attributesAsList()
