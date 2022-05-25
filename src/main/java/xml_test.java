@@ -4,8 +4,10 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.w3c.dom.Attr;
 import org.xml.sax.SAXException;
 import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -25,6 +27,9 @@ public class xml_test
 {
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException
     {
+
+
+
         Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/iTrust/", "/home/marcel/Downloads/iTrust/source_req.xml");
         String[] index_paths_req = createIndices("index_test/reqs/", name_to_file);
         Directory dir = FSDirectory.open(Paths.get(index_paths_req[0]));
@@ -42,11 +47,18 @@ public class xml_test
         System.out.println("begin calculating features");
         List<InstanceData> data = get_full_dataset(req_readers, java_readers, null);
         System.out.println("Test");
+        // TODO check if this is the same length as getUnlabeledWekaInstance
         List<Attribute> att = InstanceData.attributesAsList();
+        att.add(new Attribute("class"));
         Instances dataset = new Instances("iTrust", (ArrayList<Attribute>) att, 20000);
+        dataset.setClassIndex(dataset.numAttributes() -1);
         Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/iTrust/", "/home/marcel/Downloads/iTrust/answer_req_code.xml");
         for (InstanceData instanceData : data)
         {
+            //rewrite this return the double array, add
+            Instance instance = instanceData.getUnlabeledWekaInstance();
+            instance.setDataset(dataset);
+            instance.setClassValue(0);
             dataset.add(instanceData.getUnlabeledWekaInstance());
         }
         try
@@ -55,7 +67,7 @@ public class xml_test
 
         } catch (Exception e)
         {
-            System.out.println("failed to write dataset");
+            System.out.println(e.getMessage());
         }
         /*for(Attribute attribute : att)
         {
