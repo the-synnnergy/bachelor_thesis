@@ -56,7 +56,7 @@ public class PreQueryCalc
             for (String identifier : identifiers)
             {
                 attributes.add(new Attribute("idf_features_avg_" + identifier));
-                attributes.add(new Attribute("idf_features_max" + identifier));
+                attributes.add(new Attribute("idf_features_max_" + identifier));
                 attributes.add(new Attribute("idf_features_dev_" + identifier));
                 attributes.add(new Attribute("ictf_features_avg_" + identifier));
                 attributes.add(new Attribute("ictf_features_max_" + identifier));
@@ -65,6 +65,7 @@ public class PreQueryCalc
                 attributes.add(new Attribute("entropy_features_max_" + identifier));
                 attributes.add(new Attribute("entropy_features_dev_" + identifier));
                 attributes.add(new Attribute("var_features_avg_" + identifier));
+                attributes.add(new Attribute("var_features_max_" + identifier));
                 attributes.add(new Attribute("var_features_dev_" + identifier));
                 attributes.add(new Attribute("scq_features_avg_" + identifier));
                 attributes.add(new Attribute("scq_features_max_" + identifier));
