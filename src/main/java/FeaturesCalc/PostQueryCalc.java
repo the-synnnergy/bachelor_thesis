@@ -132,7 +132,7 @@ public class PostQueryCalc
     public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException, IllegalArgumentException
     {
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
-        if (reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
+        //if (reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
         this.reader = reader;
         document_to_termvectors = Util.get_idf_document_vectors(reader);
         this.anal = anal;
@@ -296,6 +296,7 @@ public class PostQueryCalc
      */
     private double get_clustering_tendency(String query, IndexSearcher searcher) throws IOException
     {
+        if(reader.numDocs() < 100) return Double.NaN;
         QueryBuilder qb = new QueryBuilder(anal);
         Query bool_query = qb.createBooleanQuery("body", query);
         TopDocs top100 = searcher.search(bool_query, MAX_HITS_CLUSTERING);
@@ -312,6 +313,10 @@ public class PostQueryCalc
         }
         // Now its time to remove all Docs already in the top 100 from sampling!
         sampleable_points.removeAll(doc_ids);
+        if(sampleable_points.size() == 0)
+        {
+            return Double.NaN;
+        }
         Map<Integer, double[]> term_vectors = get_idf_document_vectors(reader);
         double mean = 0;
         for (int i = 0; i < 100; i++)

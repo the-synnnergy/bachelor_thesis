@@ -2,10 +2,7 @@ package FeaturesCalc;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.w3c.dom.Attr;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +73,7 @@ public class InstanceData
         return this.identifier_target;
     }
 
-   public Instance getUnlabeledWekaInstance()
+   public List<Double> getUnlabeledWekaInstance()
    {
        // do this with Instance(double[] data)
        // 2 is for the two PreQuery features!
@@ -100,10 +97,10 @@ public class InstanceData
        {
            AttributeValues.addAll(postq_features_target[sim.ordinal()].getWekaAttributesValues());
        }
-        System.out.println(AttributeValues.size());
-        DenseInstance instance = new DenseInstance(AttributeValues.size());
-        instance = (DenseInstance) instance.copy(AttributeValues.stream().mapToDouble(Double::doubleValue).toArray());
-        return instance;
+       //AttributeValues.add(0.0d);
+       System.out.println(AttributeValues.size());
+
+       return AttributeValues;
    }
 
    public static List<Attribute> attributesAsList()

@@ -172,6 +172,7 @@ public class PreQueryCalc
     public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         System.out.println("Making PRequeryCalc");
+        System.out.println("Reader contains "+ reader.numDocs() + " documents");
         long time = System.currentTimeMillis();
         this.reader = reader;
         collection_size = reader.getDocCount("body");
