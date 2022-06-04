@@ -42,7 +42,7 @@ public class LinkMiner
     }
 
 
-    public List<String> getLinksByRelative(String query, float percentageOfHits) throws IOException
+    public List<String> getLinksByRelative(String query, float percentageOfTopScore) throws IOException
     {
         // anal = analyzerFactory.getAnalyzer();
         Analyzer anal = new EnglishAnalyzer();
@@ -50,11 +50,12 @@ public class LinkMiner
         Query luceneQuery = qb.createBooleanQuery("body",query);
         TopDocs topDocs = searcher.search(luceneQuery,Integer.MAX_VALUE);
         List<String> results = new ArrayList<>();
+        float topScore = topDocs.scoreDocs[0].score;
         for(ScoreDoc scoreDoc : topDocs.scoreDocs)
         {
+            if(topScore * percentageOfTopScore > scoreDoc.score) continue;
             results.add(reader.document(scoreDoc.doc).getField("title").stringValue());
         }
-        int hits = (int) (results.size()/percentageOfHits);
-        return  results.subList(0,hits);
+        return results;
     }
 }
