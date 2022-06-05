@@ -179,8 +179,8 @@ public class FeaturesCalc
             String query = target_reader.document(i).getField("body").stringValue();
             target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
         }
-        get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs);
-        get_top_docs_to_map(target_reader, query_reader, new EnglishAnalyzer(), target_top_docs);
+        get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs, luceneSim);
+        get_top_docs_to_map(target_reader, query_reader, new EnglishAnalyzer(), target_top_docs,luceneSim);
         IndexFeatureData data = new IndexFeatureData();
         data.query_postq_map = query_postq_map;
         data.query_top_docs = query_top_docs;
@@ -189,15 +189,18 @@ public class FeaturesCalc
         return data;
     }
 
-    private static void get_top_docs_to_map(IndexReader query_reader, IndexReader target_reader, Analyzer anal, Map<Integer, TopDocs> query_top_docs) throws IOException
+    private static void get_top_docs_to_map(IndexReader query_reader, IndexReader target_reader, Analyzer anal, Map<Integer, TopDocs> query_top_docs, Similarity sim) throws IOException
     {
+
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
+        IndexSearcher searcher = new IndexSearcher(query_reader);
+        searcher.setSimilarity(sim);
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query_raw = query_reader.document(i).getField("body").stringValue();
             QueryBuilder qb = new QueryBuilder(anal);
             Query query = qb.createBooleanQuery("body", query_raw);
-            TopDocs result = (new IndexSearcher(target_reader)).search(query, Integer.MAX_VALUE);
+            TopDocs result = searcher.search(query, Integer.MAX_VALUE);
             query_top_docs.put(i, result);
         }
     }

@@ -33,10 +33,10 @@ public class IREval
 {
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException
     {
-        Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/SMOS/", "/home/marcel/Downloads/SMOS/source_req.xml");
+        Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/source_req.xml");
         String[] index_paths_req = createIndices("index_test/reqs/", name_to_file);
         Directory dir = FSDirectory.open(Paths.get(index_paths_req[0]));
-        Map<String, String> name_to_java = get_NameFileMap("/home/marcel/Downloads/SMOS/", "/home/marcel/Downloads/SMOS/target_code.xml");
+        Map<String, String> name_to_java = get_NameFileMap("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/target_code.xml");
         String[] index_paths_java = createIndices("index_test/java/", name_to_java);
         IndexReader reader_req = DirectoryReader.open(dir);
 
@@ -164,7 +164,7 @@ public class IREval
 
     private static List<Double> getMetrics(List<Map<String,List<String>>> retrievedDocsForAllSims) throws ParserConfigurationException, IOException, SAXException
     {
-        Map<String, List<String>> links = get_true_req_to_source_links("/home/marcel/Downloads/SMOS/", "/home/marcel/Downloads/SMOS/answer_req_code.xml");
+        Map<String, List<String>> links = get_true_req_to_source_links("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/answer_req_code.xml");
         List<Double> metrics = new ArrayList<>();
         for(Map<String,List<String>> docsPerSim : retrievedDocsForAllSims)
         {
@@ -173,6 +173,7 @@ public class IREval
             for(Map.Entry<String, List<String>> entry : docsPerSim.entrySet())
             {
                 List<String> linkList = links.get(entry.getKey());
+                if(linkList == null) continue;
                 List<String> linksInIrRetrieved = entry.getValue().stream().filter(linkList::contains).collect(Collectors.toList());
                 recall += linksInIrRetrieved.size()/ ((double)linkList.size());
                 precision += linksInIrRetrieved.size()/ ((double)entry.getValue().size());
