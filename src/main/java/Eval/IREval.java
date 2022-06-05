@@ -4,7 +4,11 @@ import FeaturesCalc.FeaturesCalc;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.similarities.LMDirichletSimilarity;
+import org.apache.lucene.search.similarities.LMJelinekMercerSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.QueryBuilder;
@@ -42,7 +46,8 @@ public class IREval
             java_readers[sim.ordinal()] = DirectoryReader.open(FSDirectory.open(Paths.get(index_paths_java[sim.ordinal()])));
         }
 
-        int[] numberOfDocsToRetrieve = new int[]{30,40,50,60,70,100,150,200};
+
+        int[] numberOfDocsToRetrieve = new int[]{30,40,50,60,70,100,150,200}; // ,
         double[] percentageToRetrieve = new double[]{0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1};
 
         for(int i : numberOfDocsToRetrieve)
@@ -67,6 +72,9 @@ public class IREval
         {
             searcher[i] = new IndexSearcher(java_readers[i]);
         }
+        searcher[1].setSimilarity(new ClassicSimilarity());
+        searcher[2].setSimilarity(new LMDirichletSimilarity());
+        searcher[3].setSimilarity(new LMJelinekMercerSimilarity(0.7f));
         for(int i = 0; i < reader_req.length;i++)
         {
             Map<String,List<String>> retrievedDocs = new HashMap<>();
@@ -106,6 +114,9 @@ public class IREval
         {
             searcher[i] = new IndexSearcher(java_readers[i]);
         }
+        searcher[1].setSimilarity(new ClassicSimilarity());
+        searcher[2].setSimilarity(new LMDirichletSimilarity());
+        searcher[3].setSimilarity(new LMJelinekMercerSimilarity(0.7f));
         for(int i = 0; i < reader_req.length;i++)
         {
             Map<String,List<String>> retrievedDocs = new HashMap<>();
