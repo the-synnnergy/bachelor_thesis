@@ -1,10 +1,10 @@
 package Eval;
 
 import FeaturesCalc.FeaturesCalc;
+import com.opencsv.CSVWriter;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.LMDirichletSimilarity;
@@ -15,6 +15,8 @@ import org.apache.lucene.util.QueryBuilder;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -49,21 +51,32 @@ public class IREval
 
         int[] numberOfDocsToRetrieve = new int[]{30,40,50,60,70,100,150,200}; // ,
         double[] percentageToRetrieve = new double[]{0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1};
-
+        List<String[]> csvDataNumberDocs = new ArrayList<>();
+        List<String[]> csvDataPercentage = new ArrayList<>();
         for(int i : numberOfDocsToRetrieve)
         {
-            evaluateIRDocWise(i,req_readers, java_readers);
+            csvDataNumberDocs.add(evaluateIRDocWise(i,req_readers, java_readers));
         }
         for(double i : percentageToRetrieve)
         {
-            evaluateIRPercentageWise(i,req_readers,java_readers);
+            csvDataPercentage.add(evaluateIRPercentageWise(i,req_readers,java_readers));
         }
         // evaluate different scores!
         // evaluate for 30 , 40 , 50 , 60 , 70 , 100 , 150 , 200 Documents
         // evaluate for 90, 80, 70 , 60 , 40 , 50 , 30 , 20 , 10 %
+        File numDocsFile = new File("numberDocs.csv");
+        File percentageFile = new File("percentage.csv");
+        FileWriter numDocsFileout = new FileWriter(numDocsFile);
+        FileWriter percentageFileout = new FileWriter(percentageFile);
+        CSVWriter numDocsCSVWriter = new CSVWriter(numDocsFileout);
+        CSVWriter percentageCSVWriter = new CSVWriter(percentageFileout);
+        numDocsCSVWriter.writeAll(csvDataNumberDocs);
+        percentageCSVWriter.writeAll(csvDataPercentage);
+        numDocsCSVWriter.close();
+        percentageCSVWriter.close();
     }
 
-    private static void evaluateIRPercentageWise(double percentageToRetrieve, IndexReader[] reader_req, IndexReader[] java_readers) throws IOException, ParserConfigurationException, SAXException
+    private static String[] evaluateIRPercentageWise(double percentageToRetrieve, IndexReader[] reader_req, IndexReader[] java_readers) throws IOException, ParserConfigurationException, SAXException
     {
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         List<Map<String,List<String>>> retrievedDocsForAllSims = new ArrayList<>();
@@ -97,15 +110,17 @@ public class IREval
             retrievedDocsForAllSims.add(retrievedDocs);
         }
         List<Double> results = getMetrics(retrievedDocsForAllSims);
-        System.out.println("Results for Percentage " + percentageToRetrieve);
+        List<String> data = new ArrayList<>();
+        data.add(String.valueOf(percentageToRetrieve));
         for(Double result: results)
         {
-            System.out.println(result.doubleValue());
+            data.add(String.valueOf(result));
         }
+        return data.toArray(new String[0]);
 
     }
 
-    private static void evaluateIRDocWise(int num, IndexReader[] reader_req, IndexReader[] java_readers) throws IOException, ParserConfigurationException, SAXException
+    private static String[] evaluateIRDocWise(int num, IndexReader[] reader_req, IndexReader[] java_readers) throws IOException, ParserConfigurationException, SAXException
     {
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         List<Map<String,List<String>>> retrievedDocsForAllSims = new ArrayList<>();
@@ -138,11 +153,13 @@ public class IREval
             retrievedDocsForAllSims.add(retrievedDocs);
         }
         List<Double> results = getMetrics(retrievedDocsForAllSims);
-        System.out.println("Results for Numbers of Documents " +num);
+        List<String> data = new ArrayList<>();
+        data.add(String.valueOf(num));
         for(Double result: results)
         {
-            System.out.println(result.doubleValue());
+           data.add(String.valueOf(result));
         }
+        return data.toArray(new String[0]);
     }
 
     private static List<Double> getMetrics(List<Map<String,List<String>>> retrievedDocsForAllSims) throws ParserConfigurationException, IOException, SAXException
