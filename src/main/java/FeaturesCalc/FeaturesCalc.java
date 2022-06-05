@@ -8,6 +8,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.similarities.*;
 import org.apache.lucene.util.QueryBuilder;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -104,7 +105,7 @@ public class FeaturesCalc
         {
             int i = sim.ordinal();
             // # TODO prequery only once and not for every
-            data[i] = get_IndexInstanceData(query_reader[i], target_reader[i], null);
+            data[i] = get_IndexInstanceData(query_reader[i], target_reader[i], null, sim);
         }
         // Assert all indices have the same length
         List<InstanceData> instance_data = new ArrayList<>();
@@ -142,7 +143,7 @@ public class FeaturesCalc
     }
 
 
-    public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, String stopwords) throws IOException
+    public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, String stopwords, Similarities sim) throws IOException
     {
         Map<Integer, TopDocs> query_top_docs = new HashMap<>();
         Map<Integer, TopDocs> target_top_docs = new HashMap<>();
@@ -150,9 +151,24 @@ public class FeaturesCalc
         Map<Integer, PreQueryCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
         Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
         Map<Integer, PreQueryCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
-
-        PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, new EnglishAnalyzer());
-        PostQueryCalc post_calc_target = new PostQueryCalc(query_reader, new EnglishAnalyzer());
+        Similarity luceneSim = null;
+        switch (sim)
+        {
+            case DIRIRCHLET:
+                luceneSim = new LMDirichletSimilarity();
+                break;
+            case CLASSIC_SIM:
+                luceneSim = new ClassicSimilarity();
+                break;
+            case BM_25:
+                luceneSim = new BM25Similarity();
+                break;
+            case JELINEK_MERCER:
+                luceneSim = new LMJelinekMercerSimilarity(0.7f);
+                break;
+        }
+        PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, new EnglishAnalyzer(),luceneSim);
+        PostQueryCalc post_calc_target = new PostQueryCalc(query_reader, new EnglishAnalyzer(),luceneSim);
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();

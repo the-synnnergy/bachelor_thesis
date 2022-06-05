@@ -10,6 +10,7 @@ import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.util.QueryBuilder;
 import weka.core.Attribute;
 
@@ -115,6 +116,7 @@ public class PostQueryCalc
     }
 
     IndexReader reader;
+    IndexSearcher searcher;
     Map<Integer, double[]> document_to_termvectors;
     private static final int MAX_HITS_SUBQUERY = 10;
     private static final int MAX_HITS_ROBUSTNESS_SCORE = 50;
@@ -129,11 +131,13 @@ public class PostQueryCalc
      * @param anal Analyzer which should be used for Stemming and stopword removal, must be the same(language, stopwords, stemming rules) as used in Index!
      * @throws IOException -
      */
-    public PostQueryCalc(IndexReader reader, Analyzer anal) throws IOException, IllegalArgumentException
+    public PostQueryCalc(IndexReader reader, Analyzer anal, Similarity sim) throws IOException, IllegalArgumentException
     {
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         //if (reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");
         this.reader = reader;
+        this.searcher = new IndexSearcher(reader);
+        searcher.setSimilarity(sim);
         document_to_termvectors = Util.get_idf_document_vectors(reader);
         this.anal = anal;
     }
@@ -149,7 +153,6 @@ public class PostQueryCalc
         // #TODO hotfix only here, change to better code
         this.anal = new EnglishAnalyzer();
         PostQueryFeatures features = new PostQueryFeatures();
-        IndexSearcher searcher = new IndexSearcher(reader);
         long time = System.currentTimeMillis();
         features.clustering_tendency = get_clustering_tendency(query, searcher);
         System.out.println("Clustering Tendency:" + (System.currentTimeMillis() - time));
