@@ -734,7 +734,7 @@ public class PreQueryCalc
                     coherence_score += cos_sims.get(doc_id).getOrDefault(scoreDocs[j].doc, 0.0f);
                 }
             }
-            coherence_score = coherence_score / ((double) (scoreDocs.length * (scoreDocs.length - 1)));
+            coherence_score += coherence_score / ((double) (scoreDocs.length * (scoreDocs.length - 1)));
         }
 
 
