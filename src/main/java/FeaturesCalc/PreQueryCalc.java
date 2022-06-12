@@ -725,16 +725,18 @@ public class PreQueryCalc
             // apache lucene giving error when set to Integer.MAX_VALUE, thus its set to 2147483630
             TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(), reader.numDocs());
             searcher.search(tq, collector);
+            double tmp_coherence_score = 0;
             ScoreDoc[] scoreDocs = collector.topDocs().scoreDocs;
             for (int i = 0; i < scoreDocs.length; i++)
             {
                 int doc_id = scoreDocs[i].doc;
                 for (int j = i + 1; j < scoreDocs.length; j++)
                 {
-                    coherence_score += cos_sims.get(doc_id).getOrDefault(scoreDocs[j].doc, 0.0f);
+                    tmp_coherence_score += cos_sims.get(doc_id).getOrDefault(scoreDocs[j].doc, 0.0f);
                 }
             }
-            coherence_score += coherence_score / ((double) (scoreDocs.length * (scoreDocs.length - 1)));
+            if(tmp_coherence_score == 0) continue;
+            coherence_score += tmp_coherence_score / ((double) (scoreDocs.length * (scoreDocs.length - 1)));
         }
 
 

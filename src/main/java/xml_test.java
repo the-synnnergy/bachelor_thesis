@@ -30,10 +30,10 @@ public class xml_test
     {
 
 
-        Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/SMOS/", "/home/marcel/Downloads/SMOS/source_req.xml");
+        Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/source_req.xml");
         String[] index_paths_req = createIndices("index_test/reqs/", name_to_file);
         Directory dir = FSDirectory.open(Paths.get(index_paths_req[0]));
-        Map<String, String> name_to_java = get_NameFileMap("/home/marcel/Downloads/SMOS/", "/home/marcel/Downloads/SMOS/target_code.xml");
+        Map<String, String> name_to_java = get_NameFileMap("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/target_code.xml");
         String[] index_paths_java = createIndices("index_test/java/", name_to_java);
         IndexReader reader_req = DirectoryReader.open(dir);
 
@@ -50,9 +50,9 @@ public class xml_test
         // TODO check if this is the same length as getUnlabeledWekaInstance
         List<Attribute> att = InstanceData.attributesAsList();
         att.add(new Attribute("class"));
-        Instances dataset = new Instances("iTrust", (ArrayList<Attribute>) att, 20000);
-        dataset.setClassIndex(dataset.numAttributes() -1);
-        Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/SMOS/", "/home/marcel/Downloads/SMOS/answer_req_code.xml");
+        Instances dataset = new Instances("eTOUR", (ArrayList<Attribute>) att, 20000);
+        dataset.setClassIndex(dataset.numAttributes() - 1);
+        Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/answer_req_code.xml");
         for (InstanceData instanceData : data)
         {
             //rewrite this return the double array, add
@@ -60,16 +60,16 @@ public class xml_test
 
 
             List<String> targets = b.get(instanceData.getIdentifierQuery());
-            if(targets == null || !targets.contains(instanceData.getIdentifierTarget()))
+            if (targets == null || !targets.contains(instanceData.getIdentifierTarget()))
             {
                 instanceAttributes.add(0.0d);
-                Instance instance = new DenseInstance(1,instanceAttributes.stream().mapToDouble(d->d).toArray());
+                Instance instance = new DenseInstance(1, instanceAttributes.stream().mapToDouble(d -> d).toArray());
                 instance.setDataset(dataset);
                 dataset.add(instance);
                 continue;
             }
             instanceAttributes.add(1.0d);
-            Instance instance = new DenseInstance(1,instanceAttributes.stream().mapToDouble(d->d).toArray());
+            Instance instance = new DenseInstance(1, instanceAttributes.stream().mapToDouble(d -> d).toArray());
             instance.setDataset(dataset);
             dataset.add(instance);
 
@@ -84,15 +84,4 @@ public class xml_test
         }
 
 
-    }
-
-    // #TODO move this to right package!
-    private static void create_csv_dataset(List<InstanceData> data, Map<String, List<String>> links, String path)
-    {
-
-        for (InstanceData instanceData : data)
-        {
-            //String arr[] = instanceData.toStringArr();
-        }
-    }
-}
+    }}

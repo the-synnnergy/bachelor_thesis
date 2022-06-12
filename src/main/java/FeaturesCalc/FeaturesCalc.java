@@ -112,8 +112,14 @@ public class FeaturesCalc
         // assert all readers have same length, better check here, if not throw exception!
         PreQueryCalc preQueryCalcQuery = new PreQueryCalc(query_reader[0], new EnglishAnalyzer());
         PreQueryCalc preQueryCalcTarget = new PreQueryCalc(target_reader[0],new EnglishAnalyzer());
+        Map<String,PreQueryCalc.PrequeryFeatures> target_features = new HashMap<>();
+        for(int i = 0 ; i < target_reader[0].numDocs();i++)
+        {
+            target_features.put(target_reader[0].document(i).getField("title").stringValue(),get_preq_features(target_reader[0].document(i).getField("body").stringValue(),preQueryCalcQuery));
+        }
         for (int i = 0; i < query_reader[0].numDocs(); i++)
         {
+            System.out.println(query_reader);
             PreQueryCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(),preQueryCalcTarget);
             for (int j = 0; j < target_reader[0].numDocs(); j++)
             {
@@ -128,7 +134,7 @@ public class FeaturesCalc
                 }
 
                 instance.preq_features_query = preqFeaturesQuery;
-                instance.preq_features_target = get_preq_features(target_reader[0].document(j).getField("body").stringValue(),preQueryCalcQuery);
+                instance.preq_features_target = target_features.getOrDefault(target_reader[0].document(j).getField("title").stringValue(),get_preq_features(target_reader[0].document(j).getField("body").stringValue(),preQueryCalcQuery));
                 instance.identifier_query = query_reader[0].document(i).getField("title").stringValue();
                 instance.identifier_target = target_reader[0].document(j).getField("title").stringValue();
                 instance_data.add(instance);

@@ -23,10 +23,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.*;
+
 
 public class IndexCreator
 {
+    private static List<String> keywords = Arrays.asList("abstract","assert","boolean","break","byte","case","catch","char","class","const","continue","default","do","double","else","enum","extends","final",
+            "finally","float","for","goto","if","implements","import","instanceof","int","interface","long","native","new","package","private","protected","public","return","short","static","strictfp",
+            "super","switch","synchronized","this","throw","throws","transient","try","void","volatile","while");
     public static String[] createIndices(String index_basepath, Map<String, String> path_to_content) throws IOException
     {
         String[] index_paths = new String[FeaturesCalc.Similarities.values().length];
@@ -73,6 +77,21 @@ public class IndexCreator
                 body_field_type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
                 Path file = Path.of(entry.getValue());
                 String body = Files.readString(file, StandardCharsets.ISO_8859_1);
+                // split words by leerzeichen, dann
+                String[] body_splitted = body.split("\\s+");
+                List<String> preprocessed_strings = new ArrayList<>();
+                for(String a : body_splitted)
+                {
+                    String[] c = a.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
+                    if(!Collections.disjoint(keywords, Collections.singleton(c))) continue;
+                    preprocessed_strings.addAll(List.of(c));
+                }
+                StringBuilder sb = new StringBuilder();
+                for(String a : preprocessed_strings)
+                {
+                    sb.append(a).append(" ");
+                }
+                body = sb.toString();
                 Field body_field = new Field("body", body, body_field_type);
                 doc.add(body_field);
                 doc.add(new StringField("title", entry.getKey(), Field.Store.YES));
