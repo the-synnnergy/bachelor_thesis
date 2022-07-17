@@ -30,10 +30,10 @@ public class xml_test
     {
 
 
-        Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/source_req.xml");
+        Map<String, String> name_to_file = get_NameFileMap("/home/marcel/Downloads/iTrust/", "/home/marcel/Downloads/iTrust/source_req.xml");
         String[] index_paths_req = createIndices("index_test/reqs/", name_to_file);
         Directory dir = FSDirectory.open(Paths.get(index_paths_req[0]));
-        Map<String, String> name_to_java = get_NameFileMap("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/target_code.xml");
+        Map<String, String> name_to_java = get_NameFileMap("/home/marcel/Downloads/iTrust/", "/home/marcel/Downloads/iTrust/target_code.xml");
         String[] index_paths_java = createIndices("index_test/java/", name_to_java);
         IndexReader reader_req = DirectoryReader.open(dir);
 
@@ -50,9 +50,9 @@ public class xml_test
         // TODO check if this is the same length as getUnlabeledWekaInstance
         List<Attribute> att = InstanceData.attributesAsList();
         att.add(new Attribute("class"));
-        Instances dataset = new Instances("eTOUR", (ArrayList<Attribute>) att, 20000);
+        Instances dataset = new Instances("iTrust", (ArrayList<Attribute>) att, 50000);
         dataset.setClassIndex(dataset.numAttributes() - 1);
-        Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/eTOUR/", "/home/marcel/Downloads/eTOUR/answer_req_code.xml");
+        Map<String, List<String>> b = get_true_req_to_source_links("/home/marcel/Downloads/iTrust/", "/home/marcel/Downloads/iTrust/answer_req_code.xml");
         for (InstanceData instanceData : data)
         {
             //rewrite this return the double array, add

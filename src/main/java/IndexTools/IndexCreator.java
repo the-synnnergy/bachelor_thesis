@@ -91,7 +91,8 @@ public class IndexCreator
                 {
                     sb.append(a).append(" ");
                 }
-                body = sb.toString();
+                body = entry.getKey();
+                body = body +" " +  sb.toString();
                 Field body_field = new Field("body", body, body_field_type);
                 doc.add(body_field);
                 doc.add(new StringField("title", entry.getKey(), Field.Store.YES));
