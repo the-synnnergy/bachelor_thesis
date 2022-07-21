@@ -5,8 +5,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import weka.core.Attribute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class InstanceData
 {
@@ -16,6 +18,7 @@ public class InstanceData
     PreQueryCalc.PrequeryFeatures preq_features_query;
     PostQueryCalc.PostQueryFeatures[] postq_features_target = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
     PreQueryCalc.PrequeryFeatures preq_features_target;
+    double[] documentStatistics = new double[5];
     String identifier_query;
     String identifier_target;
 
@@ -86,7 +89,6 @@ public class InstanceData
        {
            AttributeValues.add(sim_scores_target[sim.ordinal()]);
        }
-       // #TODO fix calculcating preq features only!
        AttributeValues.addAll(preq_features_query.getWekaAttributesValues());
        AttributeValues.addAll(preq_features_target.getWekaAttributesValues());
        for(FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
@@ -97,6 +99,7 @@ public class InstanceData
        {
            AttributeValues.addAll(postq_features_target[sim.ordinal()].getWekaAttributesValues());
        }
+       AttributeValues.addAll(DoubleStream.of(documentStatistics).boxed().collect(Collectors.toList()));
        //AttributeValues.add(0.0d);
        System.out.println(AttributeValues.size());
 
@@ -116,7 +119,11 @@ public class InstanceData
        }
        AttributesList.addAll(PreQueryCalc.PrequeryFeatures.getWekaAttributesNames());
        AttributesList.addAll(PostQueryCalc.PostQueryFeatures.getWekaAttributesNames());
-
+       AttributesList.add(new Attribute("UniqueTermsQuery"));
+       AttributesList.add(new Attribute("TotalTermsQuery"));
+       AttributesList.add(new Attribute("UniqueTermsTarget"));
+       AttributesList.add(new Attribute("TotalTermsTarget"));
+       AttributesList.add(new Attribute("JaccardMeasure"));
        return AttributesList;
    }
 }

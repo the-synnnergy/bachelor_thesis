@@ -112,6 +112,7 @@ public class FeaturesCalc
         // assert all readers have same length, better check here, if not throw exception!
         PreQueryCalc preQueryCalcQuery = new PreQueryCalc(query_reader[0], new EnglishAnalyzer());
         PreQueryCalc preQueryCalcTarget = new PreQueryCalc(target_reader[0],new EnglishAnalyzer());
+        DocumentStatisticsFeatures documentStatisticsFeatures = new DocumentStatisticsFeatures(query_reader[0],target_reader[0],new EnglishAnalyzer());
         Map<String,PreQueryCalc.PrequeryFeatures> target_features = new HashMap<>();
         for(int i = 0 ; i < target_reader[0].numDocs();i++)
         {
@@ -137,6 +138,7 @@ public class FeaturesCalc
                 instance.preq_features_target = target_features.getOrDefault(target_reader[0].document(j).getField("title").stringValue(),get_preq_features(target_reader[0].document(j).getField("body").stringValue(),preQueryCalcQuery));
                 instance.identifier_query = query_reader[0].document(i).getField("title").stringValue();
                 instance.identifier_target = target_reader[0].document(j).getField("title").stringValue();
+                instance.documentStatistics = documentStatisticsFeatures.getDocumentStatisticsFeatures(instance.identifier_query, instance.identifier_target);
                 instance_data.add(instance);
             }
         }
