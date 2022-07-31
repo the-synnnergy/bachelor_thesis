@@ -36,7 +36,7 @@ public final class PertubedScorer extends Scorer
     private final DocIdSetIterator iterator;
     private final LeafSimScorer docScorer;
     private final ImpactsDISI impactsDisi;
-    private final List<Integer> documents_to_pertubate;
+    private final List<Integer> documentsToPertubate;
 
     /**
      * Construct a {@link TermScorer} that will iterate all documents.
@@ -48,7 +48,7 @@ public final class PertubedScorer extends Scorer
         impactsEnum = new SlowImpactsEnum(postingsEnum);
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
         this.docScorer = docScorer;
-        this.documents_to_pertubate = documents_to_perturbed;
+        this.documentsToPertubate = documents_to_perturbed;
     }
 
     /**
@@ -62,7 +62,7 @@ public final class PertubedScorer extends Scorer
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
         iterator = impactsDisi;
         this.docScorer = docScorer;
-        this.documents_to_pertubate = documents_to_perturbed;
+        this.documentsToPertubate = documents_to_perturbed;
     }
 
     @Override
@@ -89,8 +89,7 @@ public final class PertubedScorer extends Scorer
     public float score() throws IOException
     {
         assert docID() != DocIdSetIterator.NO_MORE_DOCS;
-        // TODO change this to a random Poisson
-        if (documents_to_pertubate.contains(docID()))
+        if (documentsToPertubate.contains(docID()))
         {
             return docScorer.score(postingsEnum.docID(), new PoissonDistribution(postingsEnum.freq()).sample());
         }
