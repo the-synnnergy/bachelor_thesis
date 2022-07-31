@@ -5,7 +5,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import weka.core.Attribute;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -14,10 +13,10 @@ public class InstanceData
 {
     double[] sim_scores_query = new double[FeaturesCalc.Similarities.values().length];
     double[] sim_scores_target = new double[FeaturesCalc.Similarities.values().length];
-    PostQueryCalc.PostQueryFeatures[] postq_features_query = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
-    PreQueryCalc.PrequeryFeatures preq_features_query;
-    PostQueryCalc.PostQueryFeatures[] postq_features_target = new PostQueryCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
-    PreQueryCalc.PrequeryFeatures preq_features_target;
+    PostRetrievalCalc.PostQueryFeatures[] postq_features_query = new PostRetrievalCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
+    PreRetrievalCalc.PrequeryFeatures preq_features_query;
+    PostRetrievalCalc.PostQueryFeatures[] postq_features_target = new PostRetrievalCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
+    PreRetrievalCalc.PrequeryFeatures preq_features_target;
     double[] documentStatistics = new double[5];
     String identifier_query;
     String identifier_target;
@@ -42,7 +41,7 @@ public class InstanceData
 
         for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
         {
-            for (PostQueryCalc.PostQueryFeatures postq_feature : postq_features_query)
+            for (PostRetrievalCalc.PostQueryFeatures postq_feature : postq_features_query)
             {
                 String name = sim.name() + "_query_preq_";
                 features.addAll(postq_feature.to_ArrayList_named(name));
@@ -51,7 +50,7 @@ public class InstanceData
 
         for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
         {
-            for (PostQueryCalc.PostQueryFeatures postq_feature : postq_features_target)
+            for (PostRetrievalCalc.PostQueryFeatures postq_feature : postq_features_target)
             {
                 String name = sim.name() + "_target_preq_";
                 features.addAll(postq_feature.to_ArrayList_named(name));
@@ -117,8 +116,8 @@ public class InstanceData
        {
            AttributesList.add(new Attribute("sim_score_target_" + sim.ordinal()));
        }
-       AttributesList.addAll(PreQueryCalc.PrequeryFeatures.getWekaAttributesNames());
-       AttributesList.addAll(PostQueryCalc.PostQueryFeatures.getWekaAttributesNames());
+       AttributesList.addAll(PreRetrievalCalc.PrequeryFeatures.getWekaAttributesNames());
+       AttributesList.addAll(PostRetrievalCalc.PostQueryFeatures.getWekaAttributesNames());
        AttributesList.add(new Attribute("UniqueTermsQuery"));
        AttributesList.add(new Attribute("TotalTermsQuery"));
        AttributesList.add(new Attribute("UniqueTermsTarget"));

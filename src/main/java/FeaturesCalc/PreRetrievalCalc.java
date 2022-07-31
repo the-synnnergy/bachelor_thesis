@@ -34,7 +34,7 @@ import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
  * idf for all Terms, tf for All terms, Collection size, Tf for Collection, Collection Size, overall Termfrequency and
  * the number of tokens in the Collection
  */
-public class PreQueryCalc
+public class PreRetrievalCalc
 {
 
     public static class PrequeryFeatures
@@ -169,7 +169,7 @@ public class PreQueryCalc
     private HashMap<String, List<Integer>> docIds_containing_term;
     private final Analyzer anal;
 
-    public PreQueryCalc(IndexReader reader, Analyzer anal) throws IOException
+    public PreRetrievalCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         System.out.println("Making PRequeryCalc");
         System.out.println("Reader contains "+ reader.numDocs() + " documents");
@@ -258,7 +258,7 @@ public class PreQueryCalc
         return docIdsContainingTerm;
     }
 
-    public PreQueryCalc(List<ImmutablePair<String, String>> corpus) throws IOException
+    public PreRetrievalCalc(List<ImmutablePair<String, String>> corpus) throws IOException
     {
         this(generate_index(corpus), new EnglishAnalyzer());
         /*reader = generate_index(corpus);

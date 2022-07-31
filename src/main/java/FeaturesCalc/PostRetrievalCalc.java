@@ -23,7 +23,7 @@ import static FeaturesCalc.Util.*;
 /**
  * Class for calculating the Postquery features mentioned in C. Mills. #TODO add reference
  */
-public class PostQueryCalc
+public class PostRetrievalCalc
 {
     /**
      * Class for storing the features, so they can be returned and then easily extracted.
@@ -131,7 +131,7 @@ public class PostQueryCalc
      * @param anal Analyzer which should be used for Stemming and stopword removal, must be the same(language, stopwords, stemming rules) as used in Index!
      * @throws IOException -
      */
-    public PostQueryCalc(IndexReader reader, Analyzer anal, Similarity sim) throws IOException, IllegalArgumentException
+    public PostRetrievalCalc(IndexReader reader, Analyzer anal, Similarity sim) throws IOException, IllegalArgumentException
     {
         BooleanQuery.setMaxClauseCount(Integer.MAX_VALUE);
         //if (reader.numDocs() < 100) throw new IllegalArgumentException("atleast 100 documents needed for useful data!");

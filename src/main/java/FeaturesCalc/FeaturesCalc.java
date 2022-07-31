@@ -1,12 +1,8 @@
 package FeaturesCalc;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.*;
 import org.apache.lucene.util.QueryBuilder;
@@ -16,13 +12,12 @@ import weka.core.converters.ConverterUtils;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 class IndexFeatureData
 {
     // Maps for saving features calculation, prefix query saves results for queries from "query index" and target for "target index"
-    Map<Integer, PostQueryCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
-    Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
+    Map<Integer, PostRetrievalCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
+    Map<Integer, PostRetrievalCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
     Map<Integer, TopDocs> query_top_docs = new HashMap<>();
     Map<Integer, TopDocs> target_top_docs = new HashMap<>();
 
@@ -110,18 +105,18 @@ public class FeaturesCalc
         // Assert all indices have the same length
         List<InstanceData> instance_data = new ArrayList<>();
         // assert all readers have same length, better check here, if not throw exception!
-        PreQueryCalc preQueryCalcQuery = new PreQueryCalc(query_reader[0], new EnglishAnalyzer());
-        PreQueryCalc preQueryCalcTarget = new PreQueryCalc(target_reader[0],new EnglishAnalyzer());
+        PreRetrievalCalc preQueryCalcRetrieval = new PreRetrievalCalc(query_reader[0], new EnglishAnalyzer());
+        PreRetrievalCalc preRetrievalCalcTarget = new PreRetrievalCalc(target_reader[0],new EnglishAnalyzer());
         DocumentStatisticsFeatures documentStatisticsFeatures = new DocumentStatisticsFeatures(query_reader[0],target_reader[0],new EnglishAnalyzer());
-        Map<String,PreQueryCalc.PrequeryFeatures> target_features = new HashMap<>();
+        Map<String, PreRetrievalCalc.PrequeryFeatures> target_features = new HashMap<>();
         for(int i = 0 ; i < target_reader[0].numDocs();i++)
         {
-            target_features.put(target_reader[0].document(i).getField("title").stringValue(),get_preq_features(target_reader[0].document(i).getField("body").stringValue(),preQueryCalcQuery));
+            target_features.put(target_reader[0].document(i).getField("title").stringValue(),get_preq_features(target_reader[0].document(i).getField("body").stringValue(), preQueryCalcRetrieval));
         }
         for (int i = 0; i < query_reader[0].numDocs(); i++)
         {
             System.out.println(query_reader);
-            PreQueryCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(),preQueryCalcTarget);
+            PreRetrievalCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(), preRetrievalCalcTarget);
             for (int j = 0; j < target_reader[0].numDocs(); j++)
             {
                 InstanceData instance = new InstanceData();
@@ -135,7 +130,7 @@ public class FeaturesCalc
                 }
 
                 instance.preq_features_query = preqFeaturesQuery;
-                instance.preq_features_target = target_features.getOrDefault(target_reader[0].document(j).getField("title").stringValue(),get_preq_features(target_reader[0].document(j).getField("body").stringValue(),preQueryCalcQuery));
+                instance.preq_features_target = target_features.getOrDefault(target_reader[0].document(j).getField("title").stringValue(),get_preq_features(target_reader[0].document(j).getField("body").stringValue(), preQueryCalcRetrieval));
                 instance.identifier_query = query_reader[0].document(i).getField("title").stringValue();
                 instance.identifier_target = target_reader[0].document(j).getField("title").stringValue();
                 instance.documentStatistics = documentStatisticsFeatures.getDocumentStatisticsFeatures(instance.identifier_query, instance.identifier_target);
@@ -145,9 +140,9 @@ public class FeaturesCalc
         return instance_data;
     }
 
-    public static PreQueryCalc.PrequeryFeatures get_preq_features(String query, PreQueryCalc preQueryCalc) throws IOException
+    public static PreRetrievalCalc.PrequeryFeatures get_preq_features(String query, PreRetrievalCalc preRetrievalCalc) throws IOException
     {
-        return preQueryCalc.get_prequery_features(query);
+        return preRetrievalCalc.get_prequery_features(query);
     }
 
 
@@ -155,10 +150,10 @@ public class FeaturesCalc
     {
         Map<Integer, TopDocs> query_top_docs = new HashMap<>();
         Map<Integer, TopDocs> target_top_docs = new HashMap<>();
-        Map<Integer, PostQueryCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
-        Map<Integer, PreQueryCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
-        Map<Integer, PostQueryCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
-        Map<Integer, PreQueryCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
+        Map<Integer, PostRetrievalCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
+        Map<Integer, PreRetrievalCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
+        Map<Integer, PostRetrievalCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
+        Map<Integer, PreRetrievalCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
         Similarity luceneSim = null;
         switch (sim)
         {
@@ -175,8 +170,8 @@ public class FeaturesCalc
                 luceneSim = new LMJelinekMercerSimilarity(0.7f);
                 break;
         }
-        PostQueryCalc post_calc_query = new PostQueryCalc(target_reader, new EnglishAnalyzer(),luceneSim);
-        PostQueryCalc post_calc_target = new PostQueryCalc(query_reader, new EnglishAnalyzer(),luceneSim);
+        PostRetrievalCalc post_calc_query = new PostRetrievalCalc(target_reader, new EnglishAnalyzer(),luceneSim);
+        PostRetrievalCalc post_calc_target = new PostRetrievalCalc(query_reader, new EnglishAnalyzer(),luceneSim);
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();
