@@ -148,32 +148,17 @@ public class PostRetrievalCalc
      * @return PostqueryFeatures object which contains all feature values
      * @throws IOException -
      */
-    public PostQueryFeatures get_PostQueryFeatures(String query) throws IOException
+    public PostQueryFeatures getPostQueryFeatures(String query) throws IOException
     {
-        // #TODO hotfix only here, change to better code
         this.anal = new EnglishAnalyzer();
         PostQueryFeatures features = new PostQueryFeatures();
-        long time = System.currentTimeMillis();
         features.clustering_tendency = get_clustering_tendency(query, searcher);
-        System.out.println("Clustering Tendency:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         features.first_rank_change = get_first_rank_change(query, searcher);
-        System.out.println("First Rank change:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
-        System.out.println("Normalized query commitment:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         features.robustness_score = get_robustness_score(query, searcher);
-        System.out.println("Get robustness score:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
-        System.out.println("Spatial autocorrelation:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         features.subquery_overlap = get_subquery_overlap(query, searcher);
-        System.out.println("subquery overlap:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
         features.weighted_information_gain = get_weighted_information_gain(query, searcher);
-        System.out.println("wig:" + (System.currentTimeMillis() - time));
         return features;
     }
 

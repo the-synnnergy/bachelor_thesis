@@ -175,12 +175,12 @@ public class FeaturesCalc
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();
-            query_postq_map.put(i, post_calc_query.get_PostQueryFeatures(query));
+            query_postq_map.put(i, post_calc_query.getPostQueryFeatures(query));
         }
         for (int i = 0; i < target_reader.numDocs(); i++)
         {
             String query = target_reader.document(i).getField("body").stringValue();
-            target_postq_map.put(i, post_calc_target.get_PostQueryFeatures(query));
+            target_postq_map.put(i, post_calc_target.getPostQueryFeatures(query));
         }
         get_top_docs_to_map(query_reader, target_reader, new EnglishAnalyzer(), query_top_docs, luceneSim);
         get_top_docs_to_map(target_reader, query_reader, new EnglishAnalyzer(), target_top_docs,luceneSim);

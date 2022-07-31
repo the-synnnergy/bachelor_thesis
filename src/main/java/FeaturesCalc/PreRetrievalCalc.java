@@ -7,21 +7,14 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
-import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.QueryBuilder;
 import weka.core.Attribute;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 import static org.apache.commons.math3.stat.StatUtils.populationVariance;
@@ -146,7 +139,7 @@ public class PreRetrievalCalc
         }
     }
 
-    private List<ImmutablePair<String, String>> corpus;
+
     // number of documents in collection
     private final int collection_size;
     // Term frequency for all Terms. String is the term and long is the freq in the corpus altogether.
@@ -157,7 +150,6 @@ public class PreRetrievalCalc
     private final Map<String, Float> idf_map = new HashMap<>();
     // maps the length for each document(String is title as key)
     private final Map<String, Integer> doc_length_map = new HashMap<>();
-    private long total_tokens;
     // term prob in corpus mapping
     private final Map<String, Double> scs_prob_corpus = new HashMap<>();
     private final IndexReader reader;
@@ -171,12 +163,9 @@ public class PreRetrievalCalc
 
     public PreRetrievalCalc(IndexReader reader, Analyzer anal) throws IOException
     {
-        System.out.println("Making PRequeryCalc");
-        System.out.println("Reader contains "+ reader.numDocs() + " documents");
-        long time = System.currentTimeMillis();
         this.reader = reader;
         collection_size = reader.getDocCount("body");
-        total_tokens = reader.getSumTotalTermFreq("body");
+        long total_tokens = reader.getSumTotalTermFreq("body");
         this.anal = anal;
         Terms all_terms = MultiTerms.getTerms(reader, "body");
         TermsEnum all_terms_it = all_terms.iterator();
@@ -207,7 +196,7 @@ public class PreRetrievalCalc
             scs_prob_corpus.put(entry.getKey(), ((double) entry.getValue()) / total_tokens);
         }
         // Generate vector space representation
-        int num_terms = corpus_termfrequency.size();
+
         HashMap<String, Integer> term_to_vectorindex = new HashMap<>();
         int i = 0;
         for (Map.Entry<String, Long> entry : corpus_termfrequency.entrySet())
@@ -229,14 +218,11 @@ public class PreRetrievalCalc
             Map<String, Integer> tf_map = terms_to_document_freqs.get(entry.getKey());
             for (Map.Entry<String, Integer> tf_entry : tf_map.entrySet())
             {
-                // change this by using idf maybe?
-                // #TODO yields Nullpointer Exception!
                 document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue()) * idf_map.get(entry.getKey());
             }
         }
-        this.cos_sims = precalcQueries();
+        this.cos_sims = precalcQueriesForPMI();
         this.docIds_containing_term = generateTermContainingMap();
-        System.out.println("it took:" + (System.currentTimeMillis() - time));
     }
 
     private HashMap<String, List<Integer>> generateTermContainingMap() throws IOException
@@ -256,96 +242,6 @@ public class PreRetrievalCalc
             docIdsContainingTerm.put(term, docsContainingCurrentTerm);
         }
         return docIdsContainingTerm;
-    }
-
-    public PreRetrievalCalc(List<ImmutablePair<String, String>> corpus) throws IOException
-    {
-        this(generate_index(corpus), new EnglishAnalyzer());
-        /*reader = generate_index(corpus);
-        //extract IDF, tf for evey Document, TF over whole corpus, Document length as tokenized and the collection size from Lucene index.
-        collection_size = reader.getDocCount("body");
-        total_tokens = reader.getSumTotalTermFreq("body");
-        Terms all_terms = MultiTerms.getTerms(reader,"body");
-        TermsEnum all_terms_it = all_terms.iterator();
-        while (all_terms_it.next() != null){
-            BytesRef term = all_terms_it.term();
-            corpus_termfrequency.put(term.utf8ToString(), all_terms_it.totalTermFreq());
-            Map<String,Integer> tf_map = new HashMap<>();
-            idf_map.put(term.utf8ToString(),new ClassicSimilarity().idf(all_terms_it.docFreq(),collection_size));
-            PostingsEnum postings = all_terms_it.postings(null);
-            int doc_id = 0;
-            while ((doc_id =postings.nextDoc()) != NO_MORE_DOCS){
-                // Add frequencies to Map key for document length! #TODO fix this to readable!
-                doc_length_map.put(reader.document(doc_id).getField("title").toString(), doc_length_map.getOrDefault(reader.document(doc_id).getField("title").toString(),0)+ postings.freq());
-                tf_map.put(reader.document(doc_id).getField("title").toString(),postings.freq());
-            }
-            // Put map with Frequency for Terms in all Documents in Termmap, so we can find the Termmap via Term and then find frequency via Document title!
-            map_to_termfrequency_map.put(term.utf8ToString(), tf_map);
-        }
-
-        for(Map.Entry<String,Integer> entry : doc_length_map.entrySet()){
-            total_tokens += entry.getValue();
-        }
-        for(Map.Entry<String,Long> entry: corpus_termfrequency.entrySet()){
-            scs_prob_corpus.put(entry.getKey(), ((double) entry.getValue())/total_tokens);
-        }
-        // Generate vector space representation
-        int num_terms = corpus_termfrequency.size();
-        HashMap<String,Integer> term_to_vectorindex = new HashMap<>();
-        int i = 0;
-        for(Map.Entry<String,Long> entry:corpus_termfrequency.entrySet()){
-            term_to_vectorindex.put(entry.getKey(),i);
-            i++;
-        }
-        // fill document vectors with 0s and make Map
-        for(int j = 0; j< reader.maxDoc();j++){
-            Double[] term_vector = new Double[corpus_termfrequency.size()];
-            Arrays.fill(term_vector,0.0);
-            document_term_vectors.put(reader.document(j).get("title"),term_vector);
-        }
-        // get terms and change freq in corresponding vector index for all occurences.
-        for(Map.Entry<String,Long> entry:corpus_termfrequency.entrySet()){
-            int index = term_to_vectorindex.get(entry.getKey());
-            Map<String,Integer> tf_map = map_to_termfrequency_map.get(entry.getKey());
-            for(Map.Entry<String,Integer> tf_entry : tf_map.entrySet()){
-                // change this by using idf maybe?
-                document_term_vectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue())* idf_map.get(tf_entry.getKey());
-            }
-        }
-*/
-    }
-
-    /**
-     * Generates index for the calculations
-     *
-     * @param corpus
-     * @return
-     */
-    private static IndexReader generate_index(List<ImmutablePair<String, String>> corpus) throws IOException
-    {
-        Analyzer analyzer = new EnglishAnalyzer();
-        IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
-        writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-        Path indexPath = Files.createTempDirectory("temp");
-        FSDirectory dir = FSDirectory.open(indexPath);
-        IndexWriter index_writer = new IndexWriter(dir, writerConfig);
-        FieldType field = new FieldType();
-        field.setTokenized(true);
-        field.setStored(true);
-        field.setStoreTermVectors(true);
-        field.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-        for (ImmutablePair<String, String> document : corpus)
-        {
-            String title = document.getLeft();
-            String body = document.getRight();
-            Document doc = new Document();
-
-            doc.add(new Field("body", title + body, field));
-            doc.add(new Field("title", title, StringField.TYPE_STORED));
-            index_writer.addDocument(doc);
-        }
-        index_writer.commit();
-        return DirectoryReader.open(index_writer);
     }
 
     /**
@@ -368,34 +264,15 @@ public class PreRetrievalCalc
         tokenStream.close();
         tokens = remove_noncorpus_tokens(tokens);
         // #TODO refactor this to filter tokens out first...
-        long time = System.currentTimeMillis();
         features.idf_features = get_idf_features(tokens);
-        //System.out.println("idf:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         features.ictf_features = get_ictf_features(tokens);
-        //System.out.println("ictf:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         features.entropy_features = get_entropy_features(tokens);
-        //System.out.println("entropy:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         features.var_features = get_var_features(tokens);
-        //System.out.println("var_features:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         features.scq_features = get_scq_features(tokens);
-        //System.out.println("scq:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         features.query_scope = get_query_scope(tokens);
-        //System.out.println("query_scope:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
         features.simplified_clarity_score = get_sclarity_score(tokens);
-        //System.out.println("simplified_clarity_score:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
-        features.pmi_features = better_pmi_score(tokens);
-        System.out.println("pmi:" + (System.currentTimeMillis() - time));
-        time = System.currentTimeMillis();
-        features.coherence_score = better_coherence_score(tokens);
-        System.out.println("coherence_score:"+(System.currentTimeMillis()-time));
-        time = System.currentTimeMillis();
+        features.pmi_features = getPMIScore(tokens);
+        features.coherence_score = getCoherenceScore(tokens);
         return features;
     }
 
@@ -590,8 +467,6 @@ public class PreRetrievalCalc
             Double prob_token_corpus = scs_prob_corpus.get(token);
             if (prob_token_corpus == null) continue;
             double prob_token_query = Collections.frequency(tokens, token) / ((double) query_size);
-            // #TODO Debug remove if no bugs!
-            //System.out.println(token+";"+Collections.frequency(tokens,token)+";"+query_size+";"+prob_token_query+";"+prob_token_corpus);
             scs += prob_token_query * Math.log(prob_token_query / prob_token_corpus);
         }
         return scs;
@@ -621,99 +496,13 @@ public class PreRetrievalCalc
         return new double[]{avg_scq, max_scq, sum_scq};
     }
 
-    // TODO Refactor this!!!
-    private double[] get_pmi_features(List<String> tokens) throws IOException
-    {
-        double avg_pmi = 0;
-        double max_pmi = -Double.MAX_VALUE;
-        List<String> token_set = new ArrayList<>();
-        IndexSearcher searcher = new IndexSearcher(reader);
-        // strip of nonexisten tokens in corpus
-        for (String token : tokens)
-        {
-            if (corpus_termfrequency.get(token) != null) token_set.add(token);
-        }
-        for (String token_a : token_set)
-        {
-            for (String token_b : token_set)
-            {
-                if (token_a.equals(token_b)) continue;
-                TermQuery tq_a = new TermQuery(new Term("body", token_a));
-                TermQuery tq_b = new TermQuery(new Term("body", token_b));
-                BooleanQuery.Builder bqb = new BooleanQuery.Builder();
-                bqb.add(tq_a, BooleanClause.Occur.MUST);
-                bqb.add(tq_b, BooleanClause.Occur.MUST);
-                BooleanQuery bq = bqb.build();
-                TopDocs topDocs = searcher.search(bq, Integer.MAX_VALUE);
-                double intersect_token_a_token_b = topDocs.scoreDocs.length / ((double) collection_size);
-                TopDocs topDocs1 = searcher.search(tq_a, Integer.MAX_VALUE);
-                double token_a_prob = topDocs1.scoreDocs.length / ((double) collection_size);
-                TopDocs topDocs2 = searcher.search(tq_b, Integer.MAX_VALUE);
-                double token_b_prob = topDocs2.scoreDocs.length / ((double) collection_size);
-                if (intersect_token_a_token_b == 0) continue;
-                double tmp_pmi = Math.log(intersect_token_a_token_b / (token_a_prob * token_b_prob));
-                avg_pmi += tmp_pmi;
-                if (tmp_pmi > max_pmi) max_pmi = tmp_pmi;
-            }
-
-        }
-        avg_pmi = (2.0d / token_set.size()) * avg_pmi;
-        return new double[]{avg_pmi, max_pmi};
-    }
-
-    private double get_coherence_score(List<String> tokens)
-    {
-        // # TODO factor out this inner looopsss....
-
-        // strip of nonexisten tokens in corpus
-        List<String> token_set = new ArrayList<>();
-        for (String token : tokens)
-        {
-            if (corpus_termfrequency.get(token) != null) token_set.add(token);
-        }
-        // get all  vectors with terms...
-        double coherence_score = 0d;
-        for (String token : token_set)
-        {
-            double tmp_score = 0d;
-            // get all documents containing term.
-            Map<String, Integer> tf_map = terms_to_document_freqs.get(token);
-            // for all documents calculate the sum..
-            ArrayList<Map.Entry<String, Integer>> tf_list = new ArrayList<>(tf_map.entrySet());
-            for (int i = 0; i < tf_list.size(); i++)
-            {
-                for (int j = i + 1; j < tf_list.size(); j++)
-                {
-                    Double[] vector_i = document_term_vectors.get(tf_list.get(i).getKey());
-                    Double[] vector_j = document_term_vectors.get(tf_list.get(j).getKey());
-                    //# TODO put this into single method
-                    double dot_product = 0d;
-                    double norm_i = 0d;
-                    double norm_j = 0d;
-                    for (int k = 0; k < vector_i.length; k++)
-                    {
-                        if (vector_i[k] == 0 || vector_j[k] == 0) continue;
-                        dot_product += vector_i[k] + vector_j[k];
-                        norm_i += Math.pow(vector_i[k], 2);
-                        norm_j += Math.pow(vector_j[k], 2);
-                    }
-                    norm_i = Math.sqrt(norm_i);
-                    norm_j = Math.sqrt(norm_j);
-                    tmp_score += dot_product / (norm_i * norm_j);
-                }
-            }
-            coherence_score += tmp_score / (tf_list.size() * tf_list.size() - 1);
-        }
-        return coherence_score;
-    }
-
     /**
      * #TODO needs to use stripped tokens
      *
      * @param tokens
      * @return
      */
-    private double better_coherence_score(List<String> tokens) throws IOException
+    private double getCoherenceScore(List<String> tokens) throws IOException
     {
         double coherence_score = 0;
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -743,7 +532,7 @@ public class PreRetrievalCalc
         return coherence_score / ((double) tokens.size());
     }
 
-    private HashMap<Integer, HashMap<Integer, Float>> precalcQueries() throws IOException
+    private HashMap<Integer, HashMap<Integer, Float>> precalcQueriesForPMI() throws IOException
     {
         IndexSearcher searcher = new IndexSearcher(this.reader);
         HashMap<Integer, HashMap<Integer, Float>> cos_sims = new HashMap<>();
@@ -767,7 +556,7 @@ public class PreRetrievalCalc
     }
 
 
-    private double[] better_pmi_score(List<String> tokens)
+    private double[] getPMIScore(List<String> tokens)
     {
         double avg_pmi = 0.0d;
         double max_pmi = -Double.MAX_VALUE;
