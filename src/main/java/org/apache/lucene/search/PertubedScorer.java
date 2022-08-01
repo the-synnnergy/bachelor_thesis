@@ -41,28 +41,28 @@ public final class PertubedScorer extends Scorer
     /**
      * Construct a {@link TermScorer} that will iterate all documents.
      */
-    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed)
+    public PertubedScorer(Weight weight, PostingsEnum postingsEnum, LeafSimScorer docScorer, List<Integer> documentsToPerturbed)
     {
         super(weight);
         iterator = this.postingsEnum = postingsEnum;
         impactsEnum = new SlowImpactsEnum(postingsEnum);
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
         this.docScorer = docScorer;
-        this.documentsToPertubate = documents_to_perturbed;
+        this.documentsToPertubate = documentsToPerturbed;
     }
 
     /**
      * Construct a {@link TermScorer} that will use impacts to skip blocks of non-competitive
      * documents.
      */
-    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer, List<Integer> documents_to_perturbed)
+    PertubedScorer(Weight weight, ImpactsEnum impactsEnum, LeafSimScorer docScorer, List<Integer> documentsToPerturbed)
     {
         super(weight);
         postingsEnum = this.impactsEnum = impactsEnum;
         impactsDisi = new ImpactsDISI(impactsEnum, impactsEnum, docScorer.getSimScorer());
         iterator = impactsDisi;
         this.docScorer = docScorer;
-        this.documentsToPertubate = documents_to_perturbed;
+        this.documentsToPertubate = documentsToPerturbed;
     }
 
     @Override

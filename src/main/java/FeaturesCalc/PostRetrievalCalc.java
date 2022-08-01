@@ -30,26 +30,26 @@ public class PostRetrievalCalc
      */
     public static class PostQueryFeatures
     {
-        double subquery_overlap;
-        double robustness_score;
-        double first_rank_change;
-        double clustering_tendency;
-        double spatial_autocorrelation;
-        double weighted_information_gain;
-        double normalized_query_commitment;
+        double subqueryOverlap;
+        double robustnessScore;
+        double firstRankChange;
+        double clusteringTendency;
+        double spatialAutocorrelation;
+        double weightedInformationGain;
+        double normalizedQueryCommitment;
 
         public PostQueryFeatures()
         { /* TODO document why this constructor is empty */ }
 
         public void print()
         {
-            System.out.println("subquery_overlap:" + subquery_overlap);
-            System.out.println("robustness_score:" + robustness_score);
-            System.out.println("first_rank_change:" + first_rank_change);
-            System.out.println("clustering_tendency:" + clustering_tendency);
-            System.out.println("spatial_autocorreleation:" + spatial_autocorrelation);
-            System.out.println("WIG:" + weighted_information_gain);
-            System.out.println("Normalized query commitment:" + normalized_query_commitment);
+            System.out.println("subquery_overlap:" + subqueryOverlap);
+            System.out.println("robustness_score:" + robustnessScore);
+            System.out.println("first_rank_change:" + firstRankChange);
+            System.out.println("clustering_tendency:" + clusteringTendency);
+            System.out.println("spatial_autocorreleation:" + spatialAutocorrelation);
+            System.out.println("WIG:" + weightedInformationGain);
+            System.out.println("Normalized query commitment:" + normalizedQueryCommitment);
         }
 
         /**
@@ -58,17 +58,17 @@ public class PostRetrievalCalc
          * @param name name prefix for feature
          * @return array list with tuples containing feature name with given prefix name and values
          */
-        public List<Pair<String, Double>> to_ArrayList_named(String name)
+        public List<Pair<String, Double>> toArrayListNamed(String name)
         {
-            ArrayList<Pair<String, Double>> arr_list = new ArrayList<>();
-            arr_list.add(new ImmutablePair<>(name + "subquery_overlap", subquery_overlap));
-            arr_list.add(new ImmutablePair<>(name + "robustness_score", robustness_score));
-            arr_list.add(new ImmutablePair<>(name + "first_rank_change", first_rank_change));
-            arr_list.add(new ImmutablePair<>(name + "clustering_tendency", clustering_tendency));
-            arr_list.add(new ImmutablePair<>(name + "spatial_autocorrelation", spatial_autocorrelation));
-            arr_list.add(new ImmutablePair<>(name + "weighted_information_gain", weighted_information_gain));
-            arr_list.add(new ImmutablePair<>(name + "normalized_query_commitment", normalized_query_commitment));
-            return arr_list;
+            ArrayList<Pair<String, Double>> arrayList = new ArrayList<>();
+            arrayList.add(new ImmutablePair<>(name + "subquery_overlap", subqueryOverlap));
+            arrayList.add(new ImmutablePair<>(name + "robustness_score", robustnessScore));
+            arrayList.add(new ImmutablePair<>(name + "first_rank_change", firstRankChange));
+            arrayList.add(new ImmutablePair<>(name + "clustering_tendency", clusteringTendency));
+            arrayList.add(new ImmutablePair<>(name + "spatial_autocorrelation", spatialAutocorrelation));
+            arrayList.add(new ImmutablePair<>(name + "weighted_information_gain", weightedInformationGain));
+            arrayList.add(new ImmutablePair<>(name + "normalized_query_commitment", normalizedQueryCommitment));
+            return arrayList;
         }
 
         public static List<Attribute> getWekaAttributesNames()
@@ -76,23 +76,26 @@ public class PostRetrievalCalc
             List<Attribute> attributes = new ArrayList<>();
             for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
             {
-                attributes.add(new Attribute("subquery_overlap_" + "query_" + sim.ordinal()));
-                attributes.add(new Attribute("robustness_score_" + "query_" + sim.ordinal()));
-                attributes.add(new Attribute("first_rank_change_" + "query_" + sim.ordinal()));
-                attributes.add(new Attribute("clustering_tendency_" + "query_" + sim.ordinal()));
-                attributes.add(new Attribute("spatial_autocorrelation_" + "query_" + sim.ordinal()));
-                attributes.add(new Attribute("weighted_information_gain_" + "query_" + sim.ordinal()));
-                attributes.add(new Attribute("normalized_query_commitment_" + "query_" + sim.ordinal()));
+                String query =  "query_";
+                attributes.add(new Attribute("subquery_overlap_" + query + sim.ordinal()));
+                attributes.add(new Attribute("robustness_score_" + query + sim.ordinal()));
+                attributes.add(new Attribute("first_rank_change_" + query + sim.ordinal()));
+                attributes.add(new Attribute("clustering_tendency_" + query + sim.ordinal()));
+                attributes.add(new Attribute("spatial_autocorrelation_" + query + sim.ordinal()));
+                attributes.add(new Attribute("weighted_information_gain_" + query + sim.ordinal()));
+                attributes.add(new Attribute("normalized_query_commitment_" + query + sim.ordinal()));
             }
             for (FeaturesCalc.Similarities sim : FeaturesCalc.Similarities.values())
             {
-                attributes.add(new Attribute("subquery_overlap_" + "target_" + sim.ordinal()));
-                attributes.add(new Attribute("robustness_score_" + "target_" + sim.ordinal()));
-                attributes.add(new Attribute("first_rank_change_" + "target_" + sim.ordinal()));
-                attributes.add(new Attribute("clustering_tendency_" + "target_" + sim.ordinal()));
-                attributes.add(new Attribute("spatial_autocorrelation_" + "target_" + sim.ordinal()));
-                attributes.add(new Attribute("weighted_information_gain_" + "target_" + sim.ordinal()));
-                attributes.add(new Attribute("normalized_query_commitment_" + "target_" + sim.ordinal()));
+                String target_ = "target_";
+
+                attributes.add(new Attribute("subquery_overlap_" + target_ + sim.ordinal()));
+                attributes.add(new Attribute("robustness_score_" + target_ + sim.ordinal()));
+                attributes.add(new Attribute("first_rank_change_" + target_ + sim.ordinal()));
+                attributes.add(new Attribute("clustering_tendency_" + target_ + sim.ordinal()));
+                attributes.add(new Attribute("spatial_autocorrelation_" + target_ + sim.ordinal()));
+                attributes.add(new Attribute("weighted_information_gain_" + target_ + sim.ordinal()));
+                attributes.add(new Attribute("normalized_query_commitment_" + target_ + sim.ordinal()));
             }
 
 
@@ -102,13 +105,13 @@ public class PostRetrievalCalc
         public List<Double> getWekaAttributesValues()
         {
             List<Double> values = new ArrayList<>();
-            values.add(subquery_overlap);
-            values.add(robustness_score);
-            values.add(first_rank_change);
-            values.add(clustering_tendency);
-            values.add(spatial_autocorrelation);
-            values.add(weighted_information_gain);
-            values.add(normalized_query_commitment);
+            values.add(subqueryOverlap);
+            values.add(robustnessScore);
+            values.add(firstRankChange);
+            values.add(clusteringTendency);
+            values.add(spatialAutocorrelation);
+            values.add(weightedInformationGain);
+            values.add(normalizedQueryCommitment);
             return values;
         }
 
@@ -117,12 +120,11 @@ public class PostRetrievalCalc
 
     IndexReader reader;
     IndexSearcher searcher;
-    Map<Integer, double[]> document_to_termvectors;
+    Map<Integer, double[]> documentToTermvectors;
     private static final int MAX_HITS_SUBQUERY = 10;
     private static final int MAX_HITS_ROBUSTNESS_SCORE = 50;
     private static final int MAX_HITS_WEIGHTED_INFORMATION_GAIN = 100;
     private static final int MAX_HITS_CLUSTERING = 100;
-    private int collection_size;
     private Analyzer anal;
 
     /***
@@ -138,7 +140,7 @@ public class PostRetrievalCalc
         this.reader = reader;
         this.searcher = new IndexSearcher(reader);
         searcher.setSimilarity(sim);
-        document_to_termvectors = Util.get_idf_document_vectors(reader);
+        documentToTermvectors = Util.get_idf_document_vectors(reader);
         this.anal = anal;
     }
 
@@ -152,13 +154,13 @@ public class PostRetrievalCalc
     {
         this.anal = new EnglishAnalyzer();
         PostQueryFeatures features = new PostQueryFeatures();
-        features.clustering_tendency = get_clustering_tendency(query, searcher);
-        features.first_rank_change = get_first_rank_change(query, searcher);
-        features.normalized_query_commitment = get_normalized_query_commitment(query, searcher);
-        features.robustness_score = get_robustness_score(query, searcher);
-        features.spatial_autocorrelation = get_spatial_autocorrelation(query, searcher);
-        features.subquery_overlap = get_subquery_overlap(query, searcher);
-        features.weighted_information_gain = get_weighted_information_gain(query, searcher);
+        features.clusteringTendency = getClusteringTendency(query, searcher);
+        features.firstRankChange = getFirstRankChange(query, searcher);
+        features.normalizedQueryCommitment = getNormalizedQueryCommitment(query, searcher);
+        features.robustnessScore = getRobustnessScore(query, searcher);
+        features.spatialAutocorrelation = getSpatialAutocorrelation(query, searcher);
+        features.subqueryOverlap = getSubqueryOverlap(query, searcher);
+        features.weightedInformationGain = getWeightedInformationGain(query, searcher);
         return features;
     }
 
@@ -171,29 +173,29 @@ public class PostRetrievalCalc
      * @throws IOException -
      */
 
-    private double get_subquery_overlap(String query, IndexSearcher searcher) throws IOException
+    private double getSubqueryOverlap(String query, IndexSearcher searcher) throws IOException
     {
         // get first then hits from query.
         QueryBuilder qb = new QueryBuilder(anal);
-        Query bool_query = qb.createBooleanQuery("body", query);
-        TopDocs initial_result = searcher.search(bool_query, MAX_HITS_SUBQUERY);
-        List<Integer> initial_indizes = new ArrayList<>();
-        for (ScoreDoc hit : initial_result.scoreDocs)
+        Query booleanQuery = qb.createBooleanQuery("body", query);
+        TopDocs initialResult = searcher.search(booleanQuery, MAX_HITS_SUBQUERY);
+        List<Integer> initialIndices = new ArrayList<>();
+        for (ScoreDoc hit : initialResult.scoreDocs)
         {
-            initial_indizes.add(hit.doc);
+            initialIndices.add(hit.doc);
         }
-        List<Double> overlapping_results = new ArrayList<>();
-        for (BooleanClause clause : ((BooleanQuery) bool_query).clauses())
+        List<Double> overlappingResults = new ArrayList<>();
+        for (BooleanClause clause : ((BooleanQuery) booleanQuery).clauses())
         {
-            double overlapping_results_tmp = 0;
-            TopDocs tmp_results = searcher.search(clause.getQuery(), MAX_HITS_SUBQUERY);
-            for (ScoreDoc hit : tmp_results.scoreDocs)
+            double overlappingResultsTmp = 0;
+            TopDocs tmpResults = searcher.search(clause.getQuery(), MAX_HITS_SUBQUERY);
+            for (ScoreDoc hit : tmpResults.scoreDocs)
             {
-                if (initial_indizes.contains(hit.doc)) overlapping_results_tmp++;
+                if (initialIndices.contains(hit.doc)) overlappingResultsTmp++;
             }
-            overlapping_results.add(overlapping_results_tmp);
+            overlappingResults.add(overlappingResultsTmp);
         }
-        return new StandardDeviation().evaluate(overlapping_results.stream().mapToDouble(Double::doubleValue).toArray());
+        return new StandardDeviation().evaluate(overlappingResults.stream().mapToDouble(Double::doubleValue).toArray());
     }
 
     /**
@@ -204,38 +206,38 @@ public class PostRetrievalCalc
      * @return robustness score as double
      * @throws IOException
      */
-    private double get_robustness_score(String query, IndexSearcher searcher) throws IOException
+    private double getRobustnessScore(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
-        Query bool_query = qb.createBooleanQuery("body", query);
-        TopDocs initial_result = searcher.search(bool_query, MAX_HITS_ROBUSTNESS_SCORE);
-        List<Integer> ranked_list = new ArrayList<>();
-        for (ScoreDoc hit : initial_result.scoreDocs)
+        Query booleanQuery = qb.createBooleanQuery("body", query);
+        TopDocs initialResult = searcher.search(booleanQuery, MAX_HITS_ROBUSTNESS_SCORE);
+        List<Integer> rankedList = new ArrayList<>();
+        for (ScoreDoc hit : initialResult.scoreDocs)
         {
-            ranked_list.add(hit.doc);
+            rankedList.add(hit.doc);
         }
-        List<Term> terms_list = extract_terms_boolean_query((BooleanQuery) bool_query);
+        List<Term> termList = extractTermsBooleanQuery((BooleanQuery) booleanQuery);
         // construct pertubed query
-        BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
-        query_builder.setMinimumNumberShouldMatch(1);
-        for (Term term : terms_list)
+        BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+        queryBuilder.setMinimumNumberShouldMatch(1);
+        for (Term term : termList)
         {
-            query_builder.add(new PertubedQuery(term, ranked_list), BooleanClause.Occur.SHOULD);
+            queryBuilder.add(new PertubedQuery(term, rankedList), BooleanClause.Occur.SHOULD);
         }
-        BooleanQuery pertubed_query = query_builder.build();
-        List<Double> spearman_rank_correlations = new ArrayList<>();
+        BooleanQuery pertubedQuery = queryBuilder.build();
+        List<Double> spearmanRankCorrelations = new ArrayList<>();
         for (int i = 0; i < 100; i++)
         {
-            TopDocs result = searcher.search(pertubed_query, MAX_HITS_ROBUSTNESS_SCORE);
-            List<Integer> pertubed_ranked_list = new ArrayList<>();
+            TopDocs result = searcher.search(pertubedQuery, MAX_HITS_ROBUSTNESS_SCORE);
+            List<Integer> pertubedRankedList = new ArrayList<>();
             for (ScoreDoc hit : result.scoreDocs)
             {
-                pertubed_ranked_list.add(hit.doc);
+                pertubedRankedList.add(hit.doc);
             }
-            double tmp_spearman = new SpearmansCorrelation().correlation(ranked_list.stream().mapToDouble(d -> d).toArray(), pertubed_ranked_list.stream().mapToDouble(d -> d).toArray());
-            spearman_rank_correlations.add(tmp_spearman);
+            double tmpSpearman = new SpearmansCorrelation().correlation(rankedList.stream().mapToDouble(d -> d).toArray(), pertubedRankedList.stream().mapToDouble(d -> d).toArray());
+            spearmanRankCorrelations.add(tmpSpearman);
         }
-        return spearman_rank_correlations.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
+        return spearmanRankCorrelations.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
     }
 
     /***
@@ -245,33 +247,33 @@ public class PostRetrievalCalc
      * @return first rank change as double
      * @throws IOException
      */
-    private double get_first_rank_change(String query, IndexSearcher searcher) throws IOException
+    private double getFirstRankChange(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
-        Query bool_query = qb.createBooleanQuery("body", query);
-        TopDocs initial_result = searcher.search(bool_query, MAX_HITS_ROBUSTNESS_SCORE);
-        int top_hit = initial_result.scoreDocs[0].doc;
-        List<Integer> ranked_list = new ArrayList<>();
-        for (ScoreDoc hit : initial_result.scoreDocs)
+        Query booleanQuery = qb.createBooleanQuery("body", query);
+        TopDocs initialResult = searcher.search(booleanQuery, MAX_HITS_ROBUSTNESS_SCORE);
+        int topHit = initialResult.scoreDocs[0].doc;
+        List<Integer> rankedList = new ArrayList<>();
+        for (ScoreDoc hit : initialResult.scoreDocs)
         {
-            ranked_list.add(hit.doc);
+            rankedList.add(hit.doc);
         }
-        List<Term> terms_list = extract_terms_boolean_query((BooleanQuery) bool_query);
+        List<Term> termList = extractTermsBooleanQuery((BooleanQuery) booleanQuery);
         // construct pertubed query
-        BooleanQuery.Builder query_builder = new BooleanQuery.Builder();
-        query_builder.setMinimumNumberShouldMatch(1);
-        for (Term term : terms_list)
+        BooleanQuery.Builder queryBuilder = new BooleanQuery.Builder();
+        queryBuilder.setMinimumNumberShouldMatch(1);
+        for (Term term : termList)
         {
-            query_builder.add(new PertubedQuery(term, ranked_list), BooleanClause.Occur.SHOULD);
+            queryBuilder.add(new PertubedQuery(term, rankedList), BooleanClause.Occur.SHOULD);
         }
-        BooleanQuery pertubed_query = query_builder.build();
-        int first_rank_change_sum = 0;
+        BooleanQuery pertubedQuery = queryBuilder.build();
+        int firstRankChangeSum = 0;
         for (int i = 0; i < 100; i++)
         {
-            TopDocs result = searcher.search(pertubed_query, MAX_HITS_ROBUSTNESS_SCORE);
-            if (result.scoreDocs[0].doc == top_hit) first_rank_change_sum++;
+            TopDocs result = searcher.search(pertubedQuery, MAX_HITS_ROBUSTNESS_SCORE);
+            if (result.scoreDocs[0].doc == topHit) firstRankChangeSum++;
         }
-        return first_rank_change_sum;
+        return firstRankChangeSum;
     }
 
     /**
@@ -282,118 +284,112 @@ public class PostRetrievalCalc
      * @return Clustering tendency as double
      * @throws IOException
      */
-    private double get_clustering_tendency(String query, IndexSearcher searcher) throws IOException
+    private double getClusteringTendency(String query, IndexSearcher searcher) throws IOException
     {
         if(reader.numDocs() < 100) return Double.NaN;
         QueryBuilder qb = new QueryBuilder(anal);
-        Query bool_query = qb.createBooleanQuery("body", query);
-        TopDocs top100 = searcher.search(bool_query, MAX_HITS_CLUSTERING);
-        Set<Integer> doc_ids = new HashSet<>();
+        Query booleanQuery = qb.createBooleanQuery("body", query);
+        TopDocs top100 = searcher.search(booleanQuery, MAX_HITS_CLUSTERING);
+        Set<Integer> docIds = new HashSet<>();
         for (ScoreDoc top_doc : top100.scoreDocs)
         {
-            doc_ids.add(top_doc.doc);
+            docIds.add(top_doc.doc);
         }
-        Set<Integer> sampleable_points = new HashSet<>();
-        TopDocs all_docs = searcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE);
-        for (ScoreDoc scoredoc : all_docs.scoreDocs)
+        Set<Integer> sampleablePoints = new HashSet<>();
+        TopDocs allDocs = searcher.search(new MatchAllDocsQuery(), Integer.MAX_VALUE);
+        for (ScoreDoc scoredoc : allDocs.scoreDocs)
         {
-            sampleable_points.add(scoredoc.doc);
+            sampleablePoints.add(scoredoc.doc);
         }
         // Now its time to remove all Docs already in the top 100 from sampling!
-        sampleable_points.removeAll(doc_ids);
-        if(sampleable_points.size() == 0)
+        sampleablePoints.removeAll(docIds);
+        if(sampleablePoints.size() == 0)
         {
             return Double.NaN;
         }
-        Map<Integer, double[]> term_vectors = get_idf_document_vectors(reader);
+        Map<Integer, double[]> termVectors = get_idf_document_vectors(reader);
         double mean = 0;
         for (int i = 0; i < 100; i++)
         {
-            mean += get_sim_query_for_mean(sampleable_points.toArray(new Integer[0]), searcher, doc_ids, top100, term_vectors, query);
+            mean += getSimQueryForMean(sampleablePoints.toArray(new Integer[0]), searcher, docIds, top100, termVectors, query);
         }
         mean = mean / 100;
-        int termvector_length = term_vectors.get(0).length;
-        double[] max = new double[termvector_length];
-        double[] min = new double[termvector_length];
+        int termvectorLength = termVectors.get(0).length;
+        double[] max = new double[termvectorLength];
+        double[] min = new double[termvectorLength];
         Arrays.fill(min, Integer.MAX_VALUE);
         for (ScoreDoc scoreDoc : top100.scoreDocs)
         {
-            double[] termvector = term_vectors.get(scoreDoc.doc);
-            for (int i = 0; i < termvector_length; i++)
+            double[] termvector = termVectors.get(scoreDoc.doc);
+            for (int i = 0; i < termvectorLength; i++)
             {
                 if (termvector[i] > max[i]) max[i] = termvector[i];
                 if (termvector[i] < min[i]) min[i] = termvector[i];
             }
         }
         double sum = 0;
-        for (int i = 0; i < termvector_length; i++)
+        for (int i = 0; i < termvectorLength; i++)
         {
             sum += max[i] - min[i];
         }
-        return mean * (1.0d / termvector_length) * sum;
+        return mean * (1.0d / termvectorLength) * sum;
     }
 
     /**
      * Submethod for calculating the Sim_query from Mill paper which is needed for Clustering Tendency
      *
-     * @param sampleable_points Document ids which are not in the top 100 results from query
+     * @param sampleablePoints Document ids which are not in the top 100 results from query
      * @param searcher          IndexSearcher on IndexReader used in Constructor
-     * @param doc_ids           Top100 query document ids
+     * @param docIds           Top100 query document ids
      * @param top100            TopDocs result from query
-     * @param term_vectors      idf vectors for index
+     * @param termVectors      idf vectors for index
      * @param query             query string
      * @return sim query for one samples point
      * @throws IOException
      */
-    private double get_sim_query_for_mean(Integer[] sampleable_points, IndexSearcher searcher, Set<Integer> doc_ids, TopDocs top100, Map<Integer, double[]> term_vectors, String query) throws IOException
+    private double getSimQueryForMean(Integer[] sampleablePoints, IndexSearcher searcher, Set<Integer> docIds, TopDocs top100, Map<Integer, double[]> termVectors, String query) throws IOException
     {
-        int sampled_point = sampleable_points[ThreadLocalRandom.current().nextInt(sampleable_points.length)];
+        int sampleablePoint = sampleablePoints[ThreadLocalRandom.current().nextInt(sampleablePoints.length)];
         QueryBuilder qb = new QueryBuilder(anal);
-        Query sampled_point_query = qb.createBooleanQuery("body", (reader.document(sampled_point).get("body")));
-        TopDocs result_docs = searcher.search(sampled_point_query, Integer.MAX_VALUE);
-        int marked_point = 0;
-        for (ScoreDoc result : result_docs.scoreDocs)
+        Query sampledPointQuery = qb.createBooleanQuery("body", (reader.document(sampleablePoint).get("body")));
+        TopDocs resultDocs = searcher.search(sampledPointQuery, Integer.MAX_VALUE);
+        int markedPoint = 0;
+        for (ScoreDoc result : resultDocs.scoreDocs)
         {
-            if (doc_ids.contains(result.doc))
+            if (docIds.contains(result.doc))
             {
-                marked_point = result.doc;
+                markedPoint = result.doc;
                 break;
             }
         }
-        int marked_point_index = 0;
+        int markedPointIndex = 0;
         for (int i = 0; i < top100.scoreDocs.length; i++)
         {
-            if (top100.scoreDocs[i].doc == marked_point)
+            if (top100.scoreDocs[i].doc == markedPoint)
             {
-                marked_point_index = i;
-                //System.out.println("Found marked point");
+                markedPointIndex = i;
                 break;
             }
         }
-        final int found_docs_query = top100.scoreDocs.length - 1;
-        int nearest_neighbor = 0;
-        if (marked_point_index == 0) nearest_neighbor = 1;
-        if (marked_point_index == top100.scoreDocs.length - 1) nearest_neighbor = marked_point_index - 1;
-        if (marked_point_index != 0 && marked_point_index != top100.scoreDocs.length - 1)
+        int nearestNeighbor = 0;
+        if (markedPointIndex == 0) nearestNeighbor = 1;
+        if (markedPointIndex == top100.scoreDocs.length - 1) nearestNeighbor = markedPointIndex - 1;
+        if (markedPointIndex != 0 && markedPointIndex != top100.scoreDocs.length - 1)
         {
-            if (top100.scoreDocs[marked_point_index - 1].score > (top100.scoreDocs[marked_point_index + 1].score))
+            if (top100.scoreDocs[markedPointIndex - 1].score > (top100.scoreDocs[markedPointIndex + 1].score))
             {
-                nearest_neighbor = marked_point_index - 1;
+                nearestNeighbor = markedPointIndex - 1;
             } else
             {
-                nearest_neighbor = marked_point_index + 1;
+                nearestNeighbor = markedPointIndex + 1;
             }
         }
-        int nearest_neighbor_doc_id = top100.scoreDocs[nearest_neighbor].doc;
-        int marked_point_doc_id = top100.scoreDocs[marked_point_index].doc;
-        //System.out.println(term_vectors.get(nearest_neighbor_doc_id)[265]);
-        //System.out.println(marked_point_doc_id);
-        double sim_query_dmp_dnn = calc_sim_query(term_vectors.get(marked_point_doc_id), term_vectors.get(nearest_neighbor_doc_id), get_query_idf_termvector(query, reader));
-        double sim_query_psp_dmp = calc_sim_query(term_vectors.get(sampled_point), term_vectors.get(marked_point_doc_id), get_query_idf_termvector(query, reader));
+        int nearestNeighborDocId = top100.scoreDocs[nearestNeighbor].doc;
+        int markedPointDocId = top100.scoreDocs[markedPointIndex].doc;
+        double simQueryDmpDnn = calcSimQuery(termVectors.get(markedPointDocId), termVectors.get(nearestNeighborDocId), get_query_idf_termvector(query, reader));
+        double simQueryPspDmp = calcSimQuery(termVectors.get(sampleablePoint), termVectors.get(markedPointDocId), get_query_idf_termvector(query, reader));
 
-
-        //System.out.println("sim query results:"+sim_query_dmp_dnn+","+sim_query_psp_dmp);
-        return sim_query_dmp_dnn / sim_query_psp_dmp;
+        return simQueryDmpDnn / simQueryPspDmp;
     }
 
     /**
@@ -402,35 +398,31 @@ public class PostRetrievalCalc
      * @param query_termvector
      * @return
      */
-    private double calc_sim_query(double[] first, double[] second, double[] query_termvector)
+    private double calcSimQuery(double[] first, double[] second, double[] query_termvector)
     {
-        // maybe do some assertions here
-        //System.out.println("lenght of vectors(calc_sim_query):" + first.length + "," + second.length + "," + query_termvector.length);
         assert query_termvector.length == first.length;
         assert first.length == second.length;
-        double sim_query_upper_part1 = 0;
-        double sim_query_lower_part1_sum1 = 0;
-        double sim_query_lower_part1_sum2 = 0;
-        double sim_query_upper_part2 = 0;
-        double sim_query_lower_part2_sum1 = 0;
-        double sim_query_lower_part2_sum2 = 0;
+        double simQueryUpperPart1 = 0;
+        double simQueryLowerPart1Sum1 = 0;
+        double simQueryLowerPart1Sum2 = 0;
+        double simQueryUpperPart2 = 0;
+        double simQueryLowerPart2Sum1 = 0;
+        double simQueryLowerPart2Sum2 = 0;
         for (int i = 0; i < first.length; i++)
         {
-            double first_freq = first[i];
-            double second_freq = second[i];
-            sim_query_upper_part1 += first_freq * second_freq;
-            sim_query_lower_part1_sum1 += Math.pow(first_freq, 2);
-            sim_query_lower_part1_sum2 += Math.pow(second_freq, 2);
-            //System.out.println("query-termvector:" + query_termvector[i]);
-            sim_query_upper_part2 += ((first_freq + second_freq) / 2) * query_termvector[i];
-            sim_query_lower_part2_sum1 += Math.pow(((first_freq + second_freq) / 2), 2);
-            sim_query_lower_part2_sum2 += Math.pow(query_termvector[i], 2);
+            double firstFreq = first[i];
+            double secondFreq = second[i];
+            simQueryUpperPart1 += firstFreq * secondFreq;
+            simQueryLowerPart1Sum1 += Math.pow(firstFreq, 2);
+            simQueryLowerPart1Sum2 += Math.pow(secondFreq, 2);
+            simQueryUpperPart2 += ((firstFreq + secondFreq) / 2) * query_termvector[i];
+            simQueryLowerPart2Sum1 += Math.pow(((firstFreq + secondFreq) / 2), 2);
+            simQueryLowerPart2Sum2 += Math.pow(query_termvector[i], 2);
         }
-        double sim_query_part1 = sim_query_upper_part1 / (sim_query_lower_part1_sum1 * sim_query_lower_part1_sum2);
-        double sim_query_part2 = sim_query_upper_part2 / (sim_query_lower_part2_sum1 * sim_query_lower_part2_sum2);
-        //System.out.println("calc_sim_query" + sim_query_part1 + "," + sim_query_part2);
-        //System.out.println("result in sim_query_calc:" + sim_query_part1 * sim_query_part2);
-        return sim_query_part1 * sim_query_part2;
+        if(simQueryLowerPart1Sum1 * simQueryLowerPart1Sum2 == 0) throw new ArithmeticException("calcSimquery denominator is zero");
+        double simQueryPart1 = simQueryUpperPart1 / (simQueryLowerPart1Sum1 * simQueryLowerPart1Sum2);
+        double simQueryPart2 = simQueryUpperPart2 / (simQueryLowerPart2Sum1 * simQueryLowerPart2Sum2);
+        return simQueryPart1 * simQueryPart2;
     }
 
     /**
@@ -441,40 +433,40 @@ public class PostRetrievalCalc
      * @return spatial autocorrelation as double
      * @throws IOException
      */
-    private double get_spatial_autocorrelation(String query, IndexSearcher searcher) throws IOException
+    private double getSpatialAutocorrelation(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
-        Query bool_query = qb.createBooleanQuery("body", query);
-        TopDocs hits = searcher.search(bool_query, 50);
-        double[] original_scores = new double[hits.scoreDocs.length];
+        Query booleanQuery = qb.createBooleanQuery("body", query);
+        TopDocs hits = searcher.search(booleanQuery, 50);
+        double[] originalScores = new double[hits.scoreDocs.length];
         for (int i = 0; i < hits.scoreDocs.length; i++)
         {
-            original_scores[i] = hits.scoreDocs[i].score;
+            originalScores[i] = hits.scoreDocs[i].score;
         }
-        double[] new_scores = new double[hits.scoreDocs.length];
+        double[] newScores = new double[hits.scoreDocs.length];
         for (int i = 0; i < hits.scoreDocs.length; i++)
         {
-            List<Double> cos_similarities = new ArrayList<>();
+            List<Double> cosSimilarities = new ArrayList<>();
             // Calculate cosine sim for each
-            double[] termvector_i = document_to_termvectors.get(hits.scoreDocs[i].doc);
+            double[] termvectorI = documentToTermvectors.get(hits.scoreDocs[i].doc);
             for (int j = 0; j < hits.scoreDocs.length; j++)
             {
                 if (j == i) continue;
 
-                double[] termvector_j = document_to_termvectors.get(hits.scoreDocs[j].doc);
-                double cos_score = Util.cos_sim(termvector_i, termvector_j);
-                cos_similarities.add(cos_score);
+                double[] termvectorJ = documentToTermvectors.get(hits.scoreDocs[j].doc);
+                double cosSim = Util.cos_sim(termvectorI, termvectorJ);
+                cosSimilarities.add(cosSim);
             }
-            cos_similarities.sort(Comparator.naturalOrder());
-            int size = Math.min(cos_similarities.size(), 5);
+            cosSimilarities.sort(Comparator.naturalOrder());
+            int size = Math.min(cosSimilarities.size(), 5);
             for (int k = 0; k < size; k++)
             {
-                new_scores[i] += cos_similarities.get(k);
+                newScores[i] += cosSimilarities.get(k);
             }
-            new_scores[i] = new_scores[i] / size;
+            newScores[i] = newScores[i] / size;
         }
 
-        return new PearsonsCorrelation().correlation(original_scores, new_scores);
+        return new PearsonsCorrelation().correlation(originalScores, newScores);
     }
 
 
@@ -486,31 +478,27 @@ public class PostRetrievalCalc
      * @return
      */
 
-    // #TODO doesnt seem to be working!
-    private double get_weighted_information_gain(String query, IndexSearcher searcher) throws IOException
+    private double getWeightedInformationGain(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
         Query q = qb.createBooleanQuery("body", query);
-        TopDocs top_hits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);
-        //TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
-        List<String> query_terms = get_query_terms(query, reader, anal);
-        double lambda = 1 / Math.sqrt(query_terms.size());
-        double weighted_information_gain = 0.0d;
-        Map<String, Double> corpus_probs = get_corpus_probs(reader);
-        // #TODO better use getOrDefault and dont add all this bullshit to the maps(alot of zero values for many vocs!
-        Map<Integer, Map<String, Double>> per_document_probs = Util.get_document_probs(reader);
-        for (ScoreDoc scoreDoc : top_hits.scoreDocs)
+        TopDocs topHits = searcher.search(q, MAX_HITS_WEIGHTED_INFORMATION_GAIN);
+        List<String> queryTerms = get_query_terms(query, reader, anal);
+        double lambda = 1 / Math.sqrt(queryTerms.size());
+        double weightedInformationGain = 0.0d;
+        Map<String, Double> corpusProbs = get_corpus_probs(reader);
+        Map<Integer, Map<String, Double>> perDocumentProbs = Util.get_document_probs(reader);
+        for (ScoreDoc scoreDoc : topHits.scoreDocs)
         {
-            Map<String, Double> term_probabilities_document = per_document_probs.get(scoreDoc.doc);
-            for (String term : query_terms)
+            Map<String, Double> termProbabilitiesDocument = perDocumentProbs.get(scoreDoc.doc);
+            for (String term : queryTerms)
             {
-                // #TODO fix this to a rational default !
-                if (corpus_probs.getOrDefault(term, 0.0d) == 0.0d) continue;
-                if (term_probabilities_document.getOrDefault(term, 0.0d) == 0.0d) continue;
-                weighted_information_gain += lambda * Math.log(term_probabilities_document.getOrDefault(term, 1.0d) / corpus_probs.getOrDefault(term, 1.0d));
+                if (corpusProbs.getOrDefault(term, 0.0d) == 0.0d) continue;
+                if (termProbabilitiesDocument.getOrDefault(term, 0.0d) == 0.0d) continue;
+                weightedInformationGain += lambda * Math.log(termProbabilitiesDocument.getOrDefault(term, 1.0d) / corpusProbs.getOrDefault(term, 1.0d));
             }
         }
-        return weighted_information_gain / top_hits.scoreDocs.length;
+        return weightedInformationGain / topHits.scoreDocs.length;
     }
 
     /**
@@ -520,34 +508,34 @@ public class PostRetrievalCalc
      * @throws IOException
      */
 
-    private double get_normalized_query_commitment(String query, IndexSearcher searcher) throws IOException
+    private double getNormalizedQueryCommitment(String query, IndexSearcher searcher) throws IOException
     {
         QueryBuilder qb = new QueryBuilder(anal);
         Query q = qb.createBooleanQuery("body", query);
-        TopDocs top_hits = searcher.search(q, 100);
-        TopDocs all_hits = searcher.search(q, Integer.MAX_VALUE);
+        TopDocs topHits = searcher.search(q, 100);
+        TopDocs allHits = searcher.search(q, Integer.MAX_VALUE);
         double mu = 0;
-        for (ScoreDoc score_doc : top_hits.scoreDocs)
+        for (ScoreDoc score_doc : topHits.scoreDocs)
         {
             mu += score_doc.score;
         }
-        mu = mu / top_hits.scoreDocs.length;
-        double total_score_sum = 0;
-        for (ScoreDoc scoreDoc : all_hits.scoreDocs)
+        mu = mu / topHits.scoreDocs.length;
+        double totalScoreSum = 0;
+        for (ScoreDoc scoreDoc : allHits.scoreDocs)
         {
-            total_score_sum += scoreDoc.score;
+            totalScoreSum += scoreDoc.score;
         }
-        double tmp_upper_deviation = 0;
-        for (ScoreDoc score_doc : top_hits.scoreDocs)
+        double tmpUpperDeviation = 0;
+        for (ScoreDoc score_doc : topHits.scoreDocs)
         {
-            tmp_upper_deviation += Math.pow((score_doc.score - mu), 2);
+            tmpUpperDeviation += Math.pow((score_doc.score - mu), 2);
         }
-        tmp_upper_deviation = tmp_upper_deviation / 100;
-        tmp_upper_deviation = Math.sqrt(tmp_upper_deviation);
-        return tmp_upper_deviation / total_score_sum;
+        tmpUpperDeviation = tmpUpperDeviation / 100;
+        tmpUpperDeviation = Math.sqrt(tmpUpperDeviation);
+        return tmpUpperDeviation / totalScoreSum;
     }
 
-    private List<Term> extract_terms_boolean_query(BooleanQuery query)
+    private List<Term> extractTermsBooleanQuery(BooleanQuery query)
     {
         List<Term> terms = new ArrayList<>();
         for (BooleanClause clause : query.clauses())

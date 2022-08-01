@@ -44,7 +44,7 @@ public class InstanceData
             for (PostRetrievalCalc.PostQueryFeatures postq_feature : postq_features_query)
             {
                 String name = sim.name() + "_query_preq_";
-                features.addAll(postq_feature.to_ArrayList_named(name));
+                features.addAll(postq_feature.toArrayListNamed(name));
             }
         }
 
@@ -53,7 +53,7 @@ public class InstanceData
             for (PostRetrievalCalc.PostQueryFeatures postq_feature : postq_features_target)
             {
                 String name = sim.name() + "_target_preq_";
-                features.addAll(postq_feature.to_ArrayList_named(name));
+                features.addAll(postq_feature.toArrayListNamed(name));
             }
         }
         return features;
