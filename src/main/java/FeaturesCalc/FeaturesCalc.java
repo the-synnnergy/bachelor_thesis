@@ -108,7 +108,7 @@ public class FeaturesCalc
         PreRetrievalCalc preQueryCalcRetrieval = new PreRetrievalCalc(query_reader[0], new EnglishAnalyzer());
         PreRetrievalCalc preRetrievalCalcTarget = new PreRetrievalCalc(target_reader[0],new EnglishAnalyzer());
         DocumentStatisticsFeatures documentStatisticsFeatures = new DocumentStatisticsFeatures(query_reader[0],target_reader[0],new EnglishAnalyzer());
-        Map<String, PreRetrievalCalc.PrequeryFeatures> target_features = new HashMap<>();
+        Map<String, PreRetrievalCalc.PreretrievalFeatures> target_features = new HashMap<>();
         for(int i = 0 ; i < target_reader[0].numDocs();i++)
         {
             target_features.put(target_reader[0].document(i).getField("title").stringValue(),get_preq_features(target_reader[0].document(i).getField("body").stringValue(), preQueryCalcRetrieval));
@@ -116,7 +116,7 @@ public class FeaturesCalc
         for (int i = 0; i < query_reader[0].numDocs(); i++)
         {
             System.out.println(query_reader);
-            PreRetrievalCalc.PrequeryFeatures  preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(), preRetrievalCalcTarget);
+            PreRetrievalCalc.PreretrievalFeatures preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(), preRetrievalCalcTarget);
             for (int j = 0; j < target_reader[0].numDocs(); j++)
             {
                 InstanceData instance = new InstanceData();
@@ -140,9 +140,9 @@ public class FeaturesCalc
         return instance_data;
     }
 
-    public static PreRetrievalCalc.PrequeryFeatures get_preq_features(String query, PreRetrievalCalc preRetrievalCalc) throws IOException
+    public static PreRetrievalCalc.PreretrievalFeatures get_preq_features(String query, PreRetrievalCalc preRetrievalCalc) throws IOException
     {
-        return preRetrievalCalc.get_prequery_features(query);
+        return preRetrievalCalc.getPretrievalFeatures(query);
     }
 
 
@@ -151,9 +151,9 @@ public class FeaturesCalc
         Map<Integer, TopDocs> query_top_docs = new HashMap<>();
         Map<Integer, TopDocs> target_top_docs = new HashMap<>();
         Map<Integer, PostRetrievalCalc.PostQueryFeatures> query_postq_map = new HashMap<>();
-        Map<Integer, PreRetrievalCalc.PrequeryFeatures> query_preq_map = new HashMap<>();
+        Map<Integer, PreRetrievalCalc.PreretrievalFeatures> query_preq_map = new HashMap<>();
         Map<Integer, PostRetrievalCalc.PostQueryFeatures> target_postq_map = new HashMap<>();
-        Map<Integer, PreRetrievalCalc.PrequeryFeatures> target_preq_map = new HashMap<>();
+        Map<Integer, PreRetrievalCalc.PreretrievalFeatures> target_preq_map = new HashMap<>();
         Similarity luceneSim = null;
         switch (sim)
         {

@@ -33,17 +33,17 @@ public class PertubedQuery extends Query
 
     private final Term term;
     private final TermStates perReaderTermState;
-    private List<Integer> documents_to_pertubate;
+    private List<Integer> documentsToPertubate;
 
     private
-    final class CustomTermWeight extends Weight
+    final class PertubedWeight extends Weight
     {
         private final Similarity similarity;
         private final Similarity.SimScorer simScorer;
         private final TermStates termStates;
         private final ScoreMode scoreMode;
 
-        public CustomTermWeight(
+        public PertubedWeight(
                 IndexSearcher searcher, ScoreMode scoreMode, float boost, TermStates termStates)
                 throws IOException
         {
@@ -129,14 +129,14 @@ public class PertubedQuery extends Query
                     new LeafSimScorer(simScorer, context.reader(), term.field(), scoreMode.needsScores());
             if (scoreMode == ScoreMode.TOP_SCORES)
             {
-                return new PertubedScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer, documents_to_pertubate);
+                return new PertubedScorer(this, termsEnum.impacts(PostingsEnum.FREQS), scorer, documentsToPertubate);
             } else
             {
                 return new PertubedScorer(
                         this,
                         termsEnum.postings(
                                 null, scoreMode.needsScores() ? PostingsEnum.FREQS : PostingsEnum.NONE),
-                        scorer, documents_to_pertubate);
+                        scorer, documentsToPertubate);
             }
         }
 
@@ -213,7 +213,7 @@ public class PertubedQuery extends Query
     public PertubedQuery(Term t, List<Integer> documents_to_perturbed)
     {
         term = Objects.requireNonNull(t);
-        this.documents_to_pertubate = Objects.requireNonNull(documents_to_perturbed);
+        this.documentsToPertubate = Objects.requireNonNull(documents_to_perturbed);
 
         perReaderTermState = null;
     }
@@ -252,7 +252,7 @@ public class PertubedQuery extends Query
             termState = this.perReaderTermState;
         }
 
-        return new CustomTermWeight(searcher, scoreMode, boost, termState);
+        return new PertubedWeight(searcher, scoreMode, boost, termState);
     }
 
     @Override

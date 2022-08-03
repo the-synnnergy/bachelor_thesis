@@ -14,9 +14,9 @@ public class InstanceData
     double[] sim_scores_query = new double[FeaturesCalc.Similarities.values().length];
     double[] sim_scores_target = new double[FeaturesCalc.Similarities.values().length];
     PostRetrievalCalc.PostQueryFeatures[] postq_features_query = new PostRetrievalCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
-    PreRetrievalCalc.PrequeryFeatures preq_features_query;
+    PreRetrievalCalc.PreretrievalFeatures preq_features_query;
     PostRetrievalCalc.PostQueryFeatures[] postq_features_target = new PostRetrievalCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
-    PreRetrievalCalc.PrequeryFeatures preq_features_target;
+    PreRetrievalCalc.PreretrievalFeatures preq_features_target;
     double[] documentStatistics = new double[5];
     String identifier_query;
     String identifier_target;
@@ -116,7 +116,7 @@ public class InstanceData
        {
            AttributesList.add(new Attribute("sim_score_target_" + sim.ordinal()));
        }
-       AttributesList.addAll(PreRetrievalCalc.PrequeryFeatures.getWekaAttributesNames());
+       AttributesList.addAll(PreRetrievalCalc.PreretrievalFeatures.getWekaAttributesNames());
        AttributesList.addAll(PostRetrievalCalc.PostQueryFeatures.getWekaAttributesNames());
        AttributesList.add(new Attribute("UniqueTermsQuery"));
        AttributesList.add(new Attribute("TotalTermsQuery"));
