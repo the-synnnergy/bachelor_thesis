@@ -16,16 +16,12 @@ import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
 public class Util
 {
-    public static List<Term> extract_terms_boolean_query(BooleanQuery query)
-    {
-        List<Term> terms = new ArrayList<>();
-        for (BooleanClause clause : query.clauses())
-        {
-            terms.add(((TermQuery) clause.getQuery()).getTerm());
-        }
-        return terms;
-    }
-
+    /**
+     * calculates the cosinus similarity between two document vectors
+     * @param a
+     * @param b
+     * @return
+     */
     public static double cos_sim(double[] a, double[] b)
     {
         if (a.length != b.length) throw new DimensionMismatchException(a.length, b.length);
@@ -43,6 +39,14 @@ public class Util
         return dot_product / (norm_i * norm_j);
     }
 
+    /**
+     * Extracts the Terms in a query which are contained in the index too and drops all other terms
+     * @param query Query string to be processed
+     * @param reader Reader which contains the Terms which should be keeped
+     * @param anal Analyzer for tokenization
+     * @return List of String containing only the query terms which are in index
+     * @throws IOException
+     */
     public static List<String> get_query_terms(String query, IndexReader reader, Analyzer anal) throws IOException
     {
         TokenStream tokenStream = anal.tokenStream("body", query);
@@ -71,8 +75,8 @@ public class Util
     /**
      * returns a map with the term vectors for each document. Mapping from docid to Termvectorarray
      *
-     * @param reader
-     * @return
+     * @param reader Reader from where the documents and vectors are extracted
+     * @return Map with document ids to termvectors
      */
     public static Map<Integer, double[]> get_idf_document_vectors(IndexReader reader) throws IOException
     {
@@ -80,12 +84,14 @@ public class Util
         TermsEnum all_terms_it = all_terms.iterator();
         Map<Integer, double[]> document_vectors = new HashMap<>();
         int length = 0;
+        // get length of term vectors
         while (all_terms_it.next() != null)
         {
 
             length++;
         }
         int num_docs = reader.numDocs();
+        // create empty termvectors
         for (int i = 0; i < num_docs; i++)
         {
             double[] term_vector = new double[length];
@@ -93,7 +99,7 @@ public class Util
         }
         all_terms_it = all_terms.iterator();
         int pos = 0;
-
+        // fill termvectors
         while (all_terms_it.next() != null)
         {
             long total_freq = all_terms_it.totalTermFreq();
@@ -113,6 +119,12 @@ public class Util
         return document_vectors;
     }
 
+    /**
+     * Mapping from Termvector index to Term as String
+     * @param reader IndexReader from where the terms are extracted
+     * @return Map which connects termvector index with the term String value
+     * @throws IOException
+     */
     public static Map<Integer, String> get_termvector_terms(IndexReader reader) throws IOException
     {
         Terms all_terms = MultiTerms.getTerms(reader, "body");
@@ -127,6 +139,12 @@ public class Util
         return termvector_terms;
     }
 
+    /**
+     * Gets the idf termvector from the reader
+     * @param reader reader from where
+     * @return idf termvector
+     * @throws IOException
+     */
     public static double[] get_idf_termvectors(IndexReader reader) throws IOException
     {
         Terms all_terms = MultiTerms.getTerms(reader, "body");
@@ -152,7 +170,13 @@ public class Util
         return idf_termvector;
     }
 
-    // #TODO get idf termvectors!!!
+    /**
+     * get the idf termvector for the query
+     * @param query query for which the termvector is created
+     * @param reader reader which contains the terms and their idfs
+     * @return idf termvector for query string
+     * @throws IOException
+     */
     public static double[] get_query_idf_termvector(String query, IndexReader reader) throws IOException
     {
         Analyzer anal = new EnglishAnalyzer();
@@ -164,30 +188,21 @@ public class Util
         {
             token_counts.merge(attr.toString(), 1, Integer::sum);
         }
-        for (Map.Entry<String, Integer> entry : token_counts.entrySet())
-        {
-            //System.out.println(entry.getKey() + ":" + entry.getValue());
-        }
         Map<Integer, String> termvector_ids = get_termvector_terms(reader);
         double[] termvector = get_idf_termvectors(reader);
-        /*System.out.println("termvector idf:" + Arrays.toString(termvector));
-        if (termvector_ids.containsValue("yourself")) System.out.println("success");
-        System.out.println(token_counts.get("yourself"));*/
-        int marker = 0;
         for (int i = 0; i < termvector.length; i++)
         {
-            if (termvector_ids.get(i).equals("yourself"))
-            {
-                /*System.out.println("query term value:" + token_counts.getOrDefault(termvector_ids.get(i), 0));
-                System.out.println("idf:" + termvector[i]);*/
-                marker = i;
-            }
             termvector[i] = token_counts.getOrDefault(termvector_ids.get(i), 0) * termvector[i];
         }
-        //System.out.println("video" + termvector[marker]);
         return termvector;
     }
 
+    /**
+     *  Calculates the probalities
+     * @param reader
+     * @return
+     * @throws IOException
+     */
     public static Map<Integer, Map<String, Double>> get_document_probs(IndexReader reader) throws IOException
     {
         Terms all_terms = MultiTerms.getTerms(reader, "body");
@@ -260,17 +275,6 @@ public class Util
         }
 
         return corpus_probs;
-    }
-
-    public static double get_sim(IndexReader reader, int doc_id, Query query) throws IOException
-    {
-        IndexSearcher searcher = new IndexSearcher(reader);
-        TopDocs results = searcher.search(query, Integer.MAX_VALUE);
-        for (ScoreDoc scoreDoc : results.scoreDocs)
-        {
-            if (scoreDoc.doc == doc_id) return scoreDoc.score;
-        }
-        return 0d;
     }
 
 }

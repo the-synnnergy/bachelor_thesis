@@ -58,39 +58,14 @@ public class FeaturesCalc
         JELINEK_MERCER
     }
 
-
-    public static List<String> get_features()
-    {
-        return null;
-    }
-
-    /***
-     *
-     * @param non_query_readers
-     * @param query
-     * @param query_identfier
-     * @param query_readers
-     * @return
+    /**
+     * Calculates the full dataset for two sets of artifacts given as Apache Lucene indices
+     * @param query_reader Source artifact indices
+     * @param target_reader target artifact indices
+     * @param stopwords stopwords
+     * @return Instance Data dataset.
      * @throws IOException
      */
-    public static Instances get_insts_to_classify_from_lucene(IndexReader[] non_query_readers, String query, String query_identfier, IndexReader[] query_readers) throws IOException
-    {
-        // Arrays for Postquery and Prequery Features
-
-        return null;
-    }
-
-    public static Instance create_instance(InstanceData data)
-    {
-        return null;
-    }
-
-    public static void to_arff_file(String filename, Instances dataset) throws Exception
-    {
-        ConverterUtils.DataSink.write(filename, dataset);
-    }
-
-
     public static List<InstanceData> get_full_dataset(IndexReader[] query_reader, IndexReader[] target_reader, String stopwords) throws IOException
     {
         assert Similarities.values().length == query_reader.length;
@@ -99,16 +74,15 @@ public class FeaturesCalc
         for (Similarities sim : Similarities.values())
         {
             int i = sim.ordinal();
-            // # TODO prequery only once and not for every
+            // precalculate the needed data to speed up the process
             data[i] = get_IndexInstanceData(query_reader[i], target_reader[i], null, sim);
         }
-        // Assert all indices have the same length
         List<InstanceData> instance_data = new ArrayList<>();
-        // assert all readers have same length, better check here, if not throw exception!
         PreRetrievalCalc preQueryCalcRetrieval = new PreRetrievalCalc(query_reader[0], new EnglishAnalyzer());
         PreRetrievalCalc preRetrievalCalcTarget = new PreRetrievalCalc(target_reader[0],new EnglishAnalyzer());
         DocumentStatisticsFeatures documentStatisticsFeatures = new DocumentStatisticsFeatures(query_reader[0],target_reader[0],new EnglishAnalyzer());
         Map<String, PreRetrievalCalc.PreretrievalFeatures> target_features = new HashMap<>();
+        // calculate the pretrieval features
         for(int i = 0 ; i < target_reader[0].numDocs();i++)
         {
             target_features.put(target_reader[0].document(i).getField("title").stringValue(),get_preq_features(target_reader[0].document(i).getField("body").stringValue(), preQueryCalcRetrieval));
@@ -119,6 +93,7 @@ public class FeaturesCalc
             PreRetrievalCalc.PreretrievalFeatures preqFeaturesQuery =  get_preq_features(query_reader[0].document(i).getField("body").stringValue(), preRetrievalCalcTarget);
             for (int j = 0; j < target_reader[0].numDocs(); j++)
             {
+                // create instance with the cached precalculated data
                 InstanceData instance = new InstanceData();
                 for (Similarities sim : Similarities.values())
                 {
@@ -145,7 +120,15 @@ public class FeaturesCalc
         return preRetrievalCalc.getPretrievalFeatures(query);
     }
 
-
+    /**
+     * Precalculates and caches data need for many calculations
+     * @param query_reader Source artifact indices
+     *  @param target_reader target artifact indices
+     * @param stopwords stopwords
+     * @param sim Similarity for the reader
+     * @return Cached data as IndexFeatureData
+     * @throws IOException
+     */
     public static IndexFeatureData get_IndexInstanceData(IndexReader query_reader, IndexReader target_reader, String stopwords, Similarities sim) throws IOException
     {
         Map<Integer, TopDocs> query_top_docs = new HashMap<>();
@@ -172,6 +155,8 @@ public class FeaturesCalc
         }
         PostRetrievalCalc post_calc_query = new PostRetrievalCalc(target_reader, new EnglishAnalyzer(),luceneSim);
         PostRetrievalCalc post_calc_target = new PostRetrievalCalc(query_reader, new EnglishAnalyzer(),luceneSim);
+        // precalculate the postretrieval features for every artifact and cache it in a map
+        // do the same for retrieval score
         for (int i = 0; i < query_reader.numDocs(); i++)
         {
             String query = query_reader.document(i).getField("body").stringValue();

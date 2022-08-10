@@ -11,6 +11,9 @@ import java.util.stream.DoubleStream;
 
 public class InstanceData
 {
+    /**
+     * Datastructue for holding the calculated feature data for a pair of two artifacts.
+     */
     double[] sim_scores_query = new double[FeaturesCalc.Similarities.values().length];
     double[] sim_scores_target = new double[FeaturesCalc.Similarities.values().length];
     PostRetrievalCalc.PostQueryFeatures[] postq_features_query = new PostRetrievalCalc.PostQueryFeatures[FeaturesCalc.Similarities.values().length];
@@ -62,7 +65,6 @@ public class InstanceData
     @Override
     public String toString()
     {
-        // does not work #TODO fix
         List<Pair<String, Double>> list = get_iterableList();
         return list.stream().map(a -> String.valueOf(a.getRight())).collect(Collectors.joining(","));
     }
@@ -75,6 +77,10 @@ public class InstanceData
         return this.identifier_target;
     }
 
+    /**
+     * get a list of doubles which can be used to create a weka instance, with no class label
+     * @return values of features
+     */
    public List<Double> getUnlabeledWekaInstance()
    {
        // do this with Instance(double[] data)
@@ -105,6 +111,10 @@ public class InstanceData
        return AttributeValues;
    }
 
+    /**
+     * gets a list of attributes which can be used together with getUnlabeledWekaInstance to create weka instance
+     * @return List of attributes
+     */
    public static List<Attribute> attributesAsList()
    {
        List<Attribute> AttributesList = new ArrayList<>();

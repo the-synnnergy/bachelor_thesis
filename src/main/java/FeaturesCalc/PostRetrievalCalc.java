@@ -71,6 +71,10 @@ public class PostRetrievalCalc
             return arrayList;
         }
 
+        /**
+         * get the attribute names
+         * @return List of Attributes
+         */
         public static List<Attribute> getWekaAttributesNames()
         {
             List<Attribute> attributes = new ArrayList<>();
@@ -102,6 +106,10 @@ public class PostRetrievalCalc
             return attributes;
         }
 
+        /**
+         * get a double List of attribute values for Postretrieval Features
+         * @return List containing features
+         */
         public List<Double> getWekaAttributesValues()
         {
             List<Double> values = new ArrayList<>();
@@ -303,7 +311,7 @@ public class PostRetrievalCalc
         }
         // Now its time to remove all Docs already in the top 100 from sampling!
         sampleablePoints.removeAll(docIds);
-        if(sampleablePoints.size() == 0)
+        if(sampleablePoints.isEmpty())
         {
             return Double.NaN;
         }
@@ -393,9 +401,10 @@ public class PostRetrievalCalc
     }
 
     /**
-     * @param first
-     * @param second
-     * @param query_termvector
+     * Helper method for clustering tendency which calculates the sim query in the formula
+     * @param first termvector for first document
+     * @param second termvector for second document
+     * @param query_termvector query termvector
      * @return
      */
     private double calcSimQuery(double[] first, double[] second, double[] query_termvector)
@@ -474,8 +483,8 @@ public class PostRetrievalCalc
      * Calculated the weighted information for given query string
      *
      * @param query    String for which weighted information is calculated
-     * @param searcher
-     * @return
+     * @param searcher IndexSearcher for the query to be performed
+     * @return weighted information gain
      */
 
     private double getWeightedInformationGain(String query, IndexSearcher searcher) throws IOException
@@ -501,10 +510,10 @@ public class PostRetrievalCalc
         return weightedInformationGain / topHits.scoreDocs.length;
     }
 
-    /**
-     * @param query
-     * @param searcher
-     * @return
+    /** Calculated the normalized query commitment for given query string
+     * @param query query for the feature to be calculated
+     * @param searcher IndexSearcher where the query is performed
+     * @return normalized query commitment
      * @throws IOException
      */
 
@@ -535,6 +544,11 @@ public class PostRetrievalCalc
         return tmpUpperDeviation / totalScoreSum;
     }
 
+    /**
+     * extract Terms from BooleanQuery
+     * @param query Boolean Query
+     * @return List of Terms contained in the Termquery which composed the BooleanQuery
+     */
     private List<Term> extractTermsBooleanQuery(BooleanQuery query)
     {
         List<Term> terms = new ArrayList<>();

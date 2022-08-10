@@ -18,18 +18,21 @@ import java.util.*;
 import static org.apache.commons.math3.stat.StatUtils.populationVariance;
 import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 
-/**
- * Class for Prequery Calculations, in this case all the PreQuery Features defined in DOI:10.1145/3078841.
- * As IDF we will use the Lucene Implementation here( i think) #TODO
- * Needs to precalculate and save the following:
- * idf for all Terms, tf for All terms, Collection size, Tf for Collection, Collection Size, overall Termfrequency and
- * the number of tokens in the Collection
- */
+
 public class PreRetrievalCalc
 {
-
+    /**
+     * Class for Prequery Calculations, in this case all the PreQuery Features defined in DOI:10.1145/3078841.
+     * As IDF we will use the Lucene Implementation here( i think) #TODO
+     * Needs to precalculate and save the following:
+     * idf for all Terms, tf for All terms, Collection size, Tf for Collection, Collection Size, overall Termfrequency and
+     * the number of tokens in the Collection
+     */
     public static class PreretrievalFeatures
     {
+        /**
+         * Datastructure for holding the Pretrieval Features
+         */
         double[] IDFFeatures;
         double[] ICTFFeatures;
         double[] entropyFeatures;
@@ -40,6 +43,10 @@ public class PreRetrievalCalc
         double simplifiedClarityScore;
         double coherenceScore;
 
+        /**
+         * Returns a List of Attribute names for weka
+         * @return List of Attributesnames
+         */
         public static List<Attribute> getWekaAttributesNames()
         {
             List<Attribute> attributes = new ArrayList<>();
@@ -71,6 +78,10 @@ public class PreRetrievalCalc
             return attributes;
         }
 
+        /**
+         * Get the Values of the Features as Double List
+         * @return List containing values for the features
+         */
         public List<Double> getWekaAttributesValues()
         {
             List<Double> values = new ArrayList<>();
@@ -82,7 +93,8 @@ public class PreRetrievalCalc
             values.add(coherenceScore);
             return values;
         }
-        // #TODO shitty solution by INtellij lol
+
+
         private void addArrFeaturesToList(List<Double> values, double[] idf_features, double[] ictf_features, double[] entropy_features)
         {
             values.add(idf_features[0]);
@@ -123,6 +135,12 @@ public class PreRetrievalCalc
     private final HashMap<String, List<Integer>> docIdsContainingTerm;
     private final Analyzer anal;
 
+    /**
+     * Constructor which extracts needed data from IndexReader, holds Analyzer and IndexSearcher
+     * @param reader Reader on which the features will be calculated
+     * @param anal Analyzer for preprocessing, should be the same as the one used in index
+     * @throws IOException
+     */
     public PreRetrievalCalc(IndexReader reader, Analyzer anal) throws IOException
     {
         this.reader = reader;
@@ -131,6 +149,7 @@ public class PreRetrievalCalc
         this.anal = anal;
         Terms allTerms = MultiTerms.getTerms(reader, "body");
         TermsEnum allTermsIt = allTerms.iterator();
+        // iterates through all terms and fills the maps
         while (allTermsIt.next() != null)
         {
             BytesRef term = allTermsIt.term();
@@ -185,10 +204,15 @@ public class PreRetrievalCalc
                 documentTermVectors.get(tf_entry.getKey())[index] = Double.valueOf(tf_entry.getValue()) * IDFMap.get(entry.getKey());
             }
         }
-        this.cosSims = precalcQueriesForPMI();
+        this.cosSims = precalcQueriesForCoherence();
         this.docIdsContainingTerm = generateTermContainingMap();
     }
 
+    /**
+     *  Generates a map which maps Terms as String to a List of Integers, which are docIDs for Index
+     * @return
+     * @throws IOException
+     */
     private HashMap<String, List<Integer>> generateTermContainingMap() throws IOException
     {
         HashMap<String, List<Integer>> docIdsContainingTerm = new HashMap<>();
@@ -209,8 +233,8 @@ public class PreRetrievalCalc
     }
 
     /**
-     * @param query
-     * @return
+     * @param query Artifact for which the features should be calculated
+     * @return Pretrieval Features wrapped in Datastructure PreretrievalFeatures
      * @throws IOException
      */
     public PreRetrievalCalc.PreretrievalFeatures getPretrievalFeatures(String query) throws IOException
@@ -241,8 +265,9 @@ public class PreRetrievalCalc
     }
 
     /**
-     * @param tokens
-     * @return
+     * removes all words from a List that do not appear in the index as terms
+     * @param tokens List of string to be trimmed
+     * @return stripped List
      */
     private List<String> removeNoncorpusTokens(List<String> tokens)
     {
@@ -284,8 +309,9 @@ public class PreRetrievalCalc
     }
 
     /**
-     * @param tokens
-     * @return
+     * Calculates the idf Features
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return array containing avgICTF, maxICTF and devICTF
      */
     private double[] getIctfFeatures(List<String> tokens)
     {
@@ -313,44 +339,47 @@ public class PreRetrievalCalc
     }
 
     /**
-     * #TODO Some error here in calculation, should be fixed
+     * Calculated the entropy features
      *
-     * @param tokens
-     * @return
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return array with avgEntropy, median entropy and max entropy
      */
     private double[] getEntropyFeatures(List<String> tokens)
     {
-        double avg_entropy = 0;
-        double median_entropy;
+        double avgEntropy = 0;
+        double medianEntropy;
         //since entropies are negative initializing with 0 was a bad idea, fixed it by setting it to lowest :)
-        double max_entropy = -Double.MAX_VALUE;
-        int query_terms = 0;
-        Integer term_frequency = 0;
+        double maxEntropy = -Double.MAX_VALUE;
+        int queryTerms = 0;
+        Integer termFrequency = 0;
         List<Double> entropies = new ArrayList<>();
         for (String token : tokens)
         {
-            Map<String, Integer> tf_map = termsToDocumentFreqs.get(token);
-            if (tf_map == null) continue;
-            query_terms++;
+            // get the doc freqs
+            Map<String, Integer> tfMap = termsToDocumentFreqs.get(token);
+            if (tfMap == null) continue;
+            queryTerms++;
 
-            double tmp_entropy = 0;
-            long corpus_tf = corpusTermfrequency.get(token);
-            for (Map.Entry<String, Integer> entry : tf_map.entrySet())
+            double tmpEntropy = 0;
+            long corpusTf = corpusTermfrequency.get(token);
+            for (Map.Entry<String, Integer> entry : tfMap.entrySet())
             {
-                tmp_entropy += (((double) entry.getValue()) / corpus_tf) * (Math.log(((double) entry.getValue()) / corpus_tf) / Math.log(collectionSize));
+                // calculate the entropy
+                tmpEntropy += (((double) entry.getValue()) / corpusTf) * (Math.log(((double) entry.getValue()) / corpusTf) / Math.log(collectionSize));
             }
-            if (tmp_entropy > max_entropy) max_entropy = tmp_entropy;
-            entropies.add(tmp_entropy);
-            avg_entropy += tmp_entropy;
+            if (tmpEntropy > maxEntropy) maxEntropy = tmpEntropy;
+            entropies.add(tmpEntropy);
+            avgEntropy += tmpEntropy;
         }
-        avg_entropy = avg_entropy / collectionSize;
-        median_entropy = new Median().evaluate(entropies.stream().mapToDouble(d -> d).toArray());
-        return new double[]{avg_entropy, median_entropy, max_entropy};
+        avgEntropy = avgEntropy / collectionSize;
+        medianEntropy = new Median().evaluate(entropies.stream().mapToDouble(d -> d).toArray());
+        return new double[]{avgEntropy, medianEntropy, maxEntropy};
     }
 
     /**
-     * @param tokens
-     * @return
+     * Calculates Variance Features
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return array with average variance, maximum variance and sum of variances.
      */
     private double[] getVarFeatures(List<String> tokens)
     {
@@ -371,8 +400,9 @@ public class PreRetrievalCalc
     }
 
     /**
-     * @param token
-     * @return
+     * Calculates the variance for a given term
+     * @param token term the variance should be calulcated for
+     * @return variance for term
      */
     private Double calcVarForTerm(String token)
     {
@@ -380,13 +410,17 @@ public class PreRetrievalCalc
         Map<String, Integer> tfFreqs = termsToDocumentFreqs.get(token);
         if (tfFreqs == null) return null;
         double varUpperSum = 0;
-        double[] wtds = new double[termsToDocumentFreqs.size()];
+        double[] wtds = new double[tfFreqs.size()];
         int i = 0;
+        // calculate the w(t,d) for the term for each document
         for (Map.Entry<String, Integer> entry : tfFreqs.entrySet())
         {
             wtds[i] = (1.0d / (docLengthMap.get(entry.getKey()))) * Math.log(1 + entry.getValue()) * IDFMap.get(token);
+            i++;
         }
+        // calculate the /w_t for the term
         double avgWtd = (1.0d / collectionSize) * Arrays.stream(wtds).sum();
+        // calculate the var for the term
         for (double wtd : wtds)
         {
             varUpperSum += Math.pow(wtd - avgWtd, 2);
@@ -396,8 +430,9 @@ public class PreRetrievalCalc
     }
 
     /**
-     * @param tokens
-     * @return
+     *Calculates the query scope
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return the query scope
      */
     private double getQueryScope(List<String> tokens)
     {
@@ -416,10 +451,9 @@ public class PreRetrievalCalc
     }
 
     /**
-     *
-     *
-     * @param tokens
-     * @return
+     * Calculates the simplified clarity score
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return simplified clarity score
      */
     private double getSclarityScore(List<String> tokens)
     {
@@ -437,8 +471,9 @@ public class PreRetrievalCalc
     }
 
     /**
-     * @param tokens
-     * @return
+     * Calculates the SCQ Features
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return array with average scq, max scq and sum scq
      */
     private double[] getScqFeatures(List<String> tokens)
     {
@@ -461,10 +496,10 @@ public class PreRetrievalCalc
     }
 
     /**
-     * #TODO needs to use stripped tokens
      *
-     * @param tokens
-     * @return
+     * Calculates the coherence score
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return coherence score
      */
     private double getCoherenceScore(List<String> tokens) throws IOException
     {
@@ -472,23 +507,22 @@ public class PreRetrievalCalc
         IndexSearcher searcher = new IndexSearcher(reader);
         for (String token : tokens)
         {
-            // get documents containing query token
-            // # TODO do this in getPretrievalFeatures!!!! the queries need to be done in constructor and then saved to a map!
             TermQuery tq = new TermQuery(new Term("body", token));
-            // apache lucene giving error when set to Integer.MAX_VALUE, thus its set to 2147483630
             TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(), reader.numDocs());
             searcher.search(tq, collector);
             double tmpCoherenceScore = 0;
             ScoreDoc[] scoreDocs = collector.topDocs().scoreDocs;
+            // for each pair of Documents in the top docs
             for (int i = 0; i < scoreDocs.length; i++)
             {
                 int doc_id = scoreDocs[i].doc;
                 for (int j = i + 1; j < scoreDocs.length; j++)
                 {
+                    // get the sim between the 2 documents, which was calculated before
                     tmpCoherenceScore += cosSims.get(doc_id).getOrDefault(scoreDocs[j].doc, 0.0f);
                 }
             }
-            if(tmpCoherenceScore == 0) continue;
+            if (tmpCoherenceScore == 0) continue;
             coherenceScore += tmpCoherenceScore / ((double) (scoreDocs.length * (scoreDocs.length - 1)));
         }
 
@@ -496,7 +530,12 @@ public class PreRetrievalCalc
         return coherenceScore / ((double) tokens.size());
     }
 
-    private HashMap<Integer, HashMap<Integer, Float>> precalcQueriesForPMI() throws IOException
+    /**
+     * Precalculates the cos sims for all pairs documents to all other documents and caches it, to save speed
+     * @return Map containing Cosine Similarities between the documents of the index
+     * @throws IOException
+     */
+    private HashMap<Integer, HashMap<Integer, Float>> precalcQueriesForCoherence() throws IOException
     {
         IndexSearcher searcher = new IndexSearcher(this.reader);
         HashMap<Integer, HashMap<Integer, Float>> cosSims = new HashMap<>();
@@ -519,7 +558,11 @@ public class PreRetrievalCalc
 
     }
 
-
+    /**
+     * Calculates the pmi score
+     * @param tokens tokenized query (same analyzer type(with same stop words!) needed as on the index!)
+     * @return array with average pmi score and max pmi score
+     */
     private double[] getPMIScore(List<String> tokens)
     {
         double avgPmi = 0.0d;
@@ -530,6 +573,7 @@ public class PreRetrievalCalc
             for (int j = i + 1; j < tokens.size(); j++)
             {
                 List<Integer> termB = docIdsContainingTerm.get(tokens.get(j));
+                // get union and intersect for pmi
                 List<Integer> intersect = new ArrayList<>(termB);
                 intersect.retainAll(termA);
                 double tmpPmi = Math.log((intersect.size() * ((double) reader.numDocs()) / ((double) termA.size() * termB.size())));
